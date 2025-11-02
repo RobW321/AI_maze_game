@@ -19,3 +19,20 @@ class GridGame:
         self.screen = pygame.display.set_mode((self.screen_size, self.screen_size))
         pygame.display.set_caption("Simple Grid Game")
         self.clock = pygame.time.Clock()
+
+    def _draw_grid(self):
+        #TODO: needs to be implemented
+        pass
+
+    def execute(self, command):
+        #TODO: needs to be implemented
+        pass
+
+    def _loop(self):
+        #TODO: needs to be implemented
+        pass
+
+if __name__ == "__main__":
+    game = GridGame(grid_size=6)
+    game._draw_grid()
+    game._loop()
