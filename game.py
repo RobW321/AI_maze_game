@@ -4,7 +4,7 @@ import numpy as np
 import random
 
 class ShapePlacementGrid:
-    def __init__(self, GUI=True, render_delay_sec=0.1, gs=6, num_colored_boxes=5):
+    def __init__(self, GUI=True, render_delay_sec=0.1, gs=15, num_colored_boxes=5):
         # Constants
         self.gridSize = gs
         self.cellSize = 40
@@ -126,64 +126,6 @@ class ShapePlacementGrid:
                 self._refresh()
             except:
                 pass
-        elif command.lower() in ['p', 'place']:
-            if self.canPlace(self.grid, self.shapes[self.currentShapeIndex], self.shapePos):
-                self._placeShape(self.grid, self.shapes[self.currentShapeIndex], self.shapePos, self.currentColorIndex)
-                self.placedShapes.append((self.currentShapeIndex, self.shapePos.copy(), self.currentColorIndex))
-                self._exportGridState(self.grid)
-                new_event = pygame.event.Event(pygame.KEYDOWN, unicode='p', key=ord('p'))
-                try:
-                    pygame.event.post(new_event)
-                    self._refresh()
-                except:
-                    pass
-                if self.checkGrid(self.grid):
-                    self.done = True
-                else:
-                    self.done = False
-        elif command.lower() in ['h', 'switchshape']:
-            self.currentShapeIndex = (self.currentShapeIndex + 1) % len(self.shapes)
-            currentShapeDimensions = self.shapesDims[self.currentShapeIndex]
-            xXented = self.shapePos[0] + currentShapeDimensions[0]
-            yXetended = self.shapePos[1] + currentShapeDimensions[1]
-
-            if (xXented > self.gridSize and yXetended > self.gridSize):
-                self.shapePos[0] -= (xXented - self.gridSize)
-                self.shapePos[1] -= (yXetended - self.gridSize)
-            elif (yXetended > self.gridSize):
-                self.shapePos[1] -= (yXetended - self.gridSize)
-            elif (xXented > self.gridSize):
-                self.shapePos[0] -= (xXented - self.gridSize)
-
-            new_event = pygame.event.Event(pygame.KEYDOWN, unicode='h', key=ord('h'))
-
-            try:
-                pygame.event.post(new_event)
-                self._refresh()
-            except:
-                pass
-        elif command.lower() in ['k', 'switchcolor']:
-            self.currentColorIndex = (self.currentColorIndex + 1) % len(self.colors)
-            new_event = pygame.event.Event(pygame.KEYDOWN, unicode='k', key=ord('k'))
-            try:
-                pygame.event.post(new_event)
-                self._refresh()
-            except:
-                pass
-        elif command.lower() in ['u', 'undo']:
-            if self.placedShapes:
-                lastShapeIndex, lastShapePos, lastColorIndex = self.placedShapes.pop()
-                self._removeShape(self.grid, self.shapes[lastShapeIndex], lastShapePos)
-                if self.checkGrid(self.grid):
-                    self.done = True
-                else:
-                    self.done = False
-                new_event = pygame.event.Event(pygame.KEYDOWN, unicode='u', key=ord('u'))
-                try:
-                    pygame.event.post(new_event)
-                    self._refresh()
-                except:
-                    pass
 
         return self.shapePos, self.currentShapeIndex, self.currentColorIndex, self.grid, self.placedShapes, self.done
 
@@ -386,18 +328,6 @@ class ShapePlacementGrid:
             print(' '.join(f'{cell:2}' for cell in row))
         print()
 
-    def _printControls(self):
-        ## Prints the controls for manual control
-        print("W/A/S/D to move the shapes.")
-        print("H to change the shape.")
-        print("K to change the color.")
-        print("P to place the shape.")
-        print("U to undo the last placed shape.")
-        print("E to print the grid state from GUI to terminal.")
-        print("I to import a dummy grid state.")
-        print("Q to quit (terminal mode only).")
-        print("Press any key to continue")
-
     def _main(self):
         ## Allows manual control over the environment.
         self._loop_gui()
@@ -405,6 +335,6 @@ class ShapePlacementGrid:
 
 if __name__ == "__main__":
     # printControls() and main() now encapsulated in the class:
-    game = ShapePlacementGrid(True, render_delay_sec=0.1, gs=6, num_colored_boxes=5)
+    game = ShapePlacementGrid(True, render_delay_sec=0.1, gs=15, num_colored_boxes=5)
     game._printControls()
     game._main()
