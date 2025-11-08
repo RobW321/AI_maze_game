@@ -3,7 +3,7 @@ from pygame import Rect
 import time
 
 class GridGame:
-    def __init__(self, cell_height=10, cell_width=10, render_delay=0.1):
+    def __init__(self, cell_height=30, cell_width=30, render_delay=0.1):
         self.cell_height = cell_height
         self.cell_width = cell_width
         self.screen_size = (1500, 800)
@@ -11,6 +11,7 @@ class GridGame:
 
         # Colors
         self.black = (0, 0, 0)
+        self.white = (255, 255, 255)
 
         # Player position
         self.pos = [0, 0]
@@ -28,17 +29,14 @@ class GridGame:
 
         for row in range(number_of_rows):
             for col in range(number_of_columns):
-                # correct checkerboard: alternate by row+col parity
-                if (row + col) % 2 == 0:
-                    color = (255, 255, 255)
-                else:
-                    color = (0, 0, 0)
 
                 rect = Rect(col * self.cell_width,
                             row * self.cell_height,
                             self.cell_width,
                             self.cell_height)
-                pygame.draw.rect(self.screen, color, rect)
+                
+                pygame.draw.rect(self.screen, self.white, rect)
+                pygame.draw.rect(self.screen, self.black, rect, width=1)
 
 
     def execute(self, command):
