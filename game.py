@@ -28,22 +28,11 @@ class GridGame:
         #TODO: needs to be implemented
         pass
 
-    def _loop(self):
-        running = True
-        while running:
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    running = False
-                elif event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_UP:
-                        self.execute("up")
-                    elif event.key == pygame.K_DOWN:
-                        self.execute("down")
-                    elif event.key == pygame.K_LEFT:
-                        self.execute("left")
-                    elif event.key == pygame.K_RIGHT:
-                        self.execute("right")
-            self.clock.tick(60)
+    def display_move(self, move):
+        self.execute(move)  # update agent position
+        self._draw_grid()  # redraw the grid
+        time.sleep(self.delay)
+
 
 if __name__ == "__main__":
     game = GridGame(grid_size=6)
