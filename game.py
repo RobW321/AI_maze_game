@@ -29,8 +29,21 @@ class GridGame:
         pass
 
     def _loop(self):
-        #TODO: needs to be implemented
-        pass
+        running = True
+        while running:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    running = False
+                elif event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_UP:
+                        self.execute("up")
+                    elif event.key == pygame.K_DOWN:
+                        self.execute("down")
+                    elif event.key == pygame.K_LEFT:
+                        self.execute("left")
+                    elif event.key == pygame.K_RIGHT:
+                        self.execute("right")
+            self.clock.tick(60)
 
 if __name__ == "__main__":
     game = GridGame(grid_size=6)
