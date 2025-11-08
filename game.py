@@ -1,6 +1,7 @@
 import pygame
 from pygame import Rect
 import time
+import random
 
 class GridGame:
     def __init__(self, cell_height=30, cell_width=30, render_delay=0.1):
@@ -10,8 +11,13 @@ class GridGame:
         self.delay = render_delay
 
         # Colors
-        self.black = (0, 0, 0)
-        self.white = (255, 255, 255)
+        self.COLOR_WALL = (139, 69, 19)     # brown
+        self.COLOR_FLOOR = (169, 169, 169)  # gray
+        self.COLOR_PLAYER = (0, 255, 0)     # green
+        self.COLOR_EXIT = (255, 0, 0)       # red
+        self.COLOR_GRID = (0, 0, 0)         # black grid lines
+        self.BLACK = self.COLOR_GRID
+        self.WHITE = (255, 255, 255)        # white
 
         # Player position
         self.pos = [0, 0]
@@ -38,6 +44,22 @@ class GridGame:
                 pygame.draw.rect(self.screen, self.white, rect)
                 pygame.draw.rect(self.screen, self.black, rect, width=1)
 
+    def _generate_dungeon(self):
+        """
+        Generates 
+        """
+        grid = []
+        for row in range(self.rows):
+            grid_row = []
+            for col in range(self.cols):
+                # Randomly choose wall or floor
+                if random.random() < 0.25:  # 25% chance of wall
+                    grid_row.append("W")
+                else:
+                    grid_row.append("F")
+            grid.append(grid_row)
+        return grid
+
 
     def execute(self, command):
         #TODO: needs to be implemented
@@ -46,6 +68,10 @@ class GridGame:
     def _loop(self):
         #TODO: needs to be implemented
         pass
+
+    def _generate_maze():
+        pass
+
 
 game = GridGame()
 if __name__ == "__main__":
