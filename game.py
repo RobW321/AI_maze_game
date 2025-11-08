@@ -1,11 +1,12 @@
 import pygame
+from pygame import Rect
 import time
 
 class GridGame:
-    def __init__(self, grid_size=15, cell_size=40, render_delay=0.1):
-        self.grid_size = grid_size
-        self.cell_size = cell_size
-        self.screen_size = grid_size * cell_size
+    def __init__(self, cell_height=10, cell_width=10, render_delay=0.1):
+        self.cell_height = cell_height
+        self.cell_width = cell_width
+        self.screen_size = (1500, 800)
         self.delay = render_delay
 
         # Colors
@@ -16,13 +17,29 @@ class GridGame:
 
         # Pygame setup
         pygame.init()
-        self.screen = pygame.display.set_mode((self.screen_size, self.screen_size))
-        pygame.display.set_caption("Simple Grid Game")
+        pygame.display.init()
+        self.screen = pygame.display.set_mode(self.screen_size)
+        pygame.display.set_caption("Maze")
         self.clock = pygame.time.Clock()
 
     def _draw_grid(self):
-        #TODO: needs to be implemented
-        pass
+        number_of_rows = self.screen_size[1] // self.cell_height
+        number_of_columns = self.screen_size[0] // self.cell_width
+
+        for row in range(number_of_rows):
+            for col in range(number_of_columns):
+                # correct checkerboard: alternate by row+col parity
+                if (row + col) % 2 == 0:
+                    color = (255, 255, 255)
+                else:
+                    color = (0, 0, 0)
+
+                rect = Rect(col * self.cell_width,
+                            row * self.cell_height,
+                            self.cell_width,
+                            self.cell_height)
+                pygame.draw.rect(self.screen, color, rect)
+
 
     def execute(self, command):
         #TODO: needs to be implemented
@@ -32,7 +49,14 @@ class GridGame:
         #TODO: needs to be implemented
         pass
 
+game = GridGame()
 if __name__ == "__main__":
-    game = GridGame(grid_size=6)
-    game._draw_grid()
-    game._loop()
+    running = True
+    while running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+
+        game._draw_grid()
+        pygame.display.flip()
+        game._loop()
