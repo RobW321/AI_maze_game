@@ -1,4 +1,6 @@
 import random
+from heapq import heappush, heappop
+
 import pygame
 from pygame import Rect
 import time
@@ -21,6 +23,7 @@ class GridGame:
         self.COLOR_GRID = (0, 0, 0)  # black grid lines
         self.BLACK = self.COLOR_GRID
         self.WHITE = (255, 255, 255)  # white
+
 
         # Player position
         self.pos = [0, 0]
@@ -227,10 +230,90 @@ def plan_next_move(player_pos, goal, goblin_pos, grid=None):
 
     return None
 
+def manhattan_distance_bad(pos1, pos2):
+   dx = abs(pos1[0] - pos2[0])
+   dy = abs(pos1[1] - pos2[1])
+   manhattan = dx + dy
 
-def move_goblin_towards_agent(goblin_pos, pos):
-    #TODO: Sasmit's implementation
-    pass
+
+   noise = random.uniform(0.2, 0.4) * manhattan #can change the noise error, depending on visualization
+   return manhattan + noise
+
+
+
+
+def distance(pos):
+   return manhattan_distance_bad(pos[0], pos[1])
+
+def move_goblin_towards_agent(self, random_chance):
+    # manhattan distance to agent heuristic, but random chance it moves to random place
+
+    if random.randint(1, 100) <= random_chance:
+        goblin_x, goblin_y = self.goblin_pos
+        potential_moves = [
+            [goblin_x - 1, goblin_y],  # Up
+            [goblin_x + 1, goblin_y],  # Down
+            [goblin_x, goblin_y - 1],  # Left
+            [goblin_x, goblin_y + 1]  # Right
+        ]
+
+        valid_moves = [
+            [x, y] for x, y in potential_moves
+            if 0 <= x < self.rows and 0 <= y < self.cols and self.grid[x][y] != "W"
+        ]
+
+        if valid_moves:
+            self.goblin_pos = random.choice(valid_moves)
+        return self.goblin_pos
+
+    # A* implementation:
+    start = tuple(self.goblin_pos)
+    goal = tuple(self.player_pos)
+
+    open_set = []
+    heappush(open_set, (manhattan_distance_bad(start, goal), 0, start, [start]))
+
+    visited = set()
+
+    while open_set:
+        f_score, g_score, current, path = heappop(open_set)
+
+        # If we reached the agent, return only the first move in the path
+        if current == goal:
+            if len(path) > 1:
+                # Take only the first step from the path
+                self.goblin_pos = list(path[1])
+            return self.goblin_pos
+
+        if current in visited:
+            continue
+        visited.add(current)
+
+        # Explore possible neighbors
+        x, y = current
+        neighbors = [
+            (x - 1, y),  # Up
+            (x + 1, y),  # Down
+            (x, y - 1),  # Left
+            (x, y + 1)  # Right
+        ]
+
+        for neighbor in neighbors:
+            n_x, n_y = neighbor
+
+            # Check if neighbor is valid
+            if (0 <= n_x < self.rows and
+                    0 <= n_y < self.cols and
+                    self.grid[n_x][n_y] != "W" and
+                    neighbor not in visited):
+                new_g_score = g_score + 1
+                new_f_score = new_g_score + manhattan_distance_bad(neighbor, goal)
+                new_path = path + [neighbor]
+
+                heappush(open_set, (new_f_score, new_g_score, neighbor, new_path))
+
+        # If no path found, the goblin stays in place
+    return self.goblin_pos
 
 
 if __name__ == "__main__":
