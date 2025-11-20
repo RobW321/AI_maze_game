@@ -248,6 +248,42 @@ def distance(pos):
 def move_goblin_towards_agent(self, random_chance):
     # manhattan distance to agent heuristic, but random chance it moves to random place
 
+def manhattan_distance(pos1, pos2):
+    return abs(pos1[0] - pos2[0]) + abs(pos1[1] - pos2[1])
+
+
+def distance(pos):
+    return manhattan_distance(pos[0], pos[1])
+
+def move_goblin_towards_agent(self, random_chance = 20):
+    #TODO: Sasmit's implementation
+    # manhatten distance to agent heuristic, but random chance it moves to random place
+    goblin_x, goblin_y = self.goblin_pos
+    heuristic = manhattan_distance(goblin_x, goblin_y)
+
+    potential_moves = [
+        (goblin_x, goblin_y - 1),  # Up
+        (goblin_x, goblin_y + 1),  # Down
+        (goblin_x - 1, goblin_y),  # Left
+        (goblin_x + 1, goblin_y)  # Right
+    ]
+
+    valid_moves = [
+        (x, y) for x, y in potential_moves
+        if 0 <= x < self.rows and 0 <= y < self.cols and self.grid[x][y] != "WALL"
+    ]
+
+    if random.randint(1, 100) <= random_chance:
+        # Move to a random valid position
+        self.goblin_pos = random.choice(valid_moves)
+    else:
+        # Move towards the player (choose the move with the smallest Manhattan distance)
+
+
+        self.goblin_pos = min(valid_moves, key=distance)
+
+    return self.goblin_pos
+
     if random.randint(1, 100) <= random_chance:
         goblin_x, goblin_y = self.goblin_pos
         potential_moves = [
