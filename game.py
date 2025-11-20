@@ -1,209 +1,8 @@
-
-# import pygame
-# from pygame import Rect
-# import time
-
-# class GridGame:
-#     def __init__(self, cell_height=30, cell_width=30, render_delay=0.1):
-#         self.cell_height = cell_height
-#         self.cell_width = cell_width
-#         self.screen_size = (1500, 800)
-#         self.delay = render_delay
-
-#         # Colors
-#         self.black = (0, 0, 0)
-#         self.white = (255, 255, 255)
-
-#         # Player position
-#         self.pos = [0, 0]
-
-#         # Pygame setup
-#         pygame.init()
-#         pygame.display.init()
-#         self.screen = pygame.display.set_mode(self.screen_size)
-#         pygame.display.set_caption("Maze")
-#         self.clock = pygame.time.Clock()
-
-#     def _draw_grid(self):
-#         number_of_rows = self.screen_size[1] // self.cell_height
-#         number_of_columns = self.screen_size[0] // self.cell_width
-
-#         for row in range(number_of_rows):
-#             for col in range(number_of_columns):
-
-#                 rect = Rect(col * self.cell_width,
-#                             row * self.cell_height,
-#                             self.cell_width,
-#                             self.cell_height)
-                
-#                 pygame.draw.rect(self.screen, self.white, rect)
-#                 pygame.draw.rect(self.screen, self.black, rect, width=1)
-
-
-#     def execute(self, command):
-#         #TODO: needs to be implemented
-#         if command == "UP" and self.pos[1] > 0:
-#             self.pos[1] -= 1
-#         elif command == "DOWN" and self.pos[1] < self.grid_size - 1:
-#             self.pos[1] += 1
-#         elif command == "LEFT" and self.pos[0] > 0:
-#             self.pos[0] -= 1
-#         elif command == "RIGHT" and self.pos[0] < self.grid_size - 1:
-#             self.pos[0] += 1
-
-#     def display_move(self, move):
-#         self.execute(move)  # update agent position
-#         self._draw_grid()  # redraw the grid
-#         time.sleep(self.delay)
-
-
-# game = GridGame()
-# if __name__ == "__main__":
-#     running = True
-#     while running:
-#         for event in pygame.event.get():
-#             if event.type == pygame.QUIT:
-#                 running = False
-
-#         game._draw_grid()
-#         pygame.display.flip()
-#         #game._loop()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# import pygame
-# from pygame import Rect
-# import time
-
-# class GridGame:
-#     def __init__(self, cell_height=10, cell_width=10, render_delay=0.1):
-#         self.cell_height = cell_height
-#         self.cell_width = cell_width
-#         self.screen_size = (1400, 800)
-#         self.delay = render_delay
-
-#         # Colors
-#         self.black = (0, 0, 0)
-
-#         # Player position
-#         self.pos = [0, 0]
-
-#         # Pygame setup
-#         pygame.init()
-#         pygame.display.init()
-#         self.screen = pygame.display.set_mode(self.screen_size)
-#         pygame.display.set_caption("Maze")
-#         self.clock = pygame.time.Clock()
-
-#     def _draw_grid(self):
-#         # Fill background
-#         self.screen.fill((255, 255, 255))
-        
-#         number_of_rows = self.screen_size[1] // self.cell_height
-#         number_of_columns = self.screen_size[0] // self.cell_width
-
-#         for row in range(number_of_rows):
-#             for col in range(number_of_columns):
-#                 # Draw each cell with border
-#                 rect = Rect(col * self.cell_width,
-#                             row * self.cell_height,
-#                             self.cell_width,
-#                             self.cell_height)
-#                 # Fill the cell with white
-#                 pygame.draw.rect(self.screen, (255, 255, 255), rect)
-#                 # Draw black border around each cell
-#                 pygame.draw.rect(self.screen, self.black, rect, width=1)
-        
-#         pygame.display.flip()
-
-
-#     def execute(self, command):
-#         if command == "UP" and self.pos[1] > 0:
-#             self.pos[1] -= 1
-#         elif command == "DOWN" and self.pos[1] < self.grid_size - 1:
-#             self.pos[1] += 1
-#         elif command == "LEFT" and self.pos[0] > 0:
-#             self.pos[0] -= 1
-#         elif command == "RIGHT" and self.pos[0] < self.grid_size - 1:
-#             self.pos[0] += 1
-
-#     def display_move(self, move):
-#         self.execute(move)  # update agent position
-#         self._draw_grid()  # redraw the grid
-#         time.sleep(self.delay)
-
-
-# game = GridGame()
-
-
-# def plan_next_move(pos, goal, goblin_pos):
-#     pass
-
-
-# def move_goblin_towards_agent(goblin_pos, pos):
-#     pass
-
-
-# if __name__ == "__main__":
-#     # Initialize the game
-#     game = GridGame(cell_height=50, cell_width=50, render_delay=0.2)
-
-#     # Example goal and goblin positions
-#     goal = [5, 5]
-#     goblin_pos = [3, 3]
-
-#     game._draw_grid()
-
-#     running = True #false for now, cuz it keeps loading a lot
-#     while running:
-#         # next_move = plan_next_move(game.pos, goal, goblin_pos)
-
-#         # game.display_move(next_move)
-
-#         # goblin_pos = move_goblin_towards_agent(goblin_pos, game.pos)
-
-#         game._draw_grid()
-
-
-#         if game.pos == goal:
-#             print("Goal reached!")
-#             running = False
-
-
-
-
-
-
-
-
-
+import random
 
 import pygame
 from pygame import Rect
 import time
-import random
 
 class GridGame:
     def __init__(self, rows=50, cols=50, cell_size=14, render_delay=0.1):
@@ -214,14 +13,14 @@ class GridGame:
         self.delay = render_delay
 
         # Colors
-        self.COLOR_WALL = (139, 69, 19)     # brown
+        self.COLOR_WALL = (139, 69, 19)  # brown
         self.COLOR_FLOOR = (169, 169, 169)  # gray
-        self.COLOR_PLAYER = (255, 255, 0)   # yellow
-        self.COLOR_GOBLIN = (0, 255, 0)     # green
-        self.COLOR_EXIT = (255, 0, 0)       # red
-        self.COLOR_GRID = (0, 0, 0)         # black grid lines
+        self.COLOR_PLAYER = (255, 255, 0)  # yellow
+        self.COLOR_GOBLIN = (0, 255, 0)  # green
+        self.COLOR_EXIT = (255, 0, 0)  # red
+        self.COLOR_GRID = (0, 0, 0)  # black grid lines
         self.BLACK = self.COLOR_GRID
-        self.WHITE = (255, 255, 255)        # white
+        self.WHITE = (255, 255, 255)  # white
 
         # Player position
         self.pos = [0, 0]
@@ -264,6 +63,7 @@ class GridGame:
 
                 pygame.draw.rect(self.screen, color, rect)
                 pygame.draw.rect(self.screen, self.COLOR_GRID, rect, width=1)
+       # pygame.display.flip()
 
     def _generate_maze(self):
         """
@@ -285,7 +85,6 @@ class GridGame:
                     grid_row.append("F")
             grid.append(grid_row)
         return grid
-    
 
     def _find_spawn(self):
         """
@@ -299,7 +98,7 @@ class GridGame:
                 if self.grid[row][col] == "F":
                     potential_spawns.append([row, col])
         return random.choice(potential_spawns)
-    
+
     def _place_exit(self):
         """
         Locates all valid exit cells for the agent in the right region
@@ -312,7 +111,7 @@ class GridGame:
                 if self.grid[row][col] == "F":
                     potential_exits.append([row, col])
         return random.choice(potential_exits)
-    
+
     def _place_goblin(self):
         """
         Locates all valid goblin spawn cells in the middle region of the
@@ -326,24 +125,53 @@ class GridGame:
                     potential_goblin_spawns.append([row, col])
         return random.choice(potential_goblin_spawns)
 
-
     def execute(self, command):
-        #TODO: needs to be implemented
-        pass
+        if command == "UP" and self.pos[1] > 0:
+            self.pos[1] -= 1
+        elif command == "DOWN" and self.pos[1] < self.grid_size - 1:
+            self.pos[1] += 1
+        elif command == "LEFT" and self.pos[0] > 0:
+            self.pos[0] -= 1
+        elif command == "RIGHT" and self.pos[0] < self.grid_size - 1:
+            self.pos[0] += 1
 
-    def _loop(self):
-        #TODO: needs to be implemented
-        pass
+    def display_move(self, move):
+        self.execute(move)  # update agent position
+        self._draw_grid()  # redraw the grid
+        time.sleep(self.delay)
 
 
 game = GridGame()
-if __name__ == "__main__":
-    running = True
-    while running:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                running = False
 
-        game._draw_grid()
-        pygame.display.flip()
-        game._loop()
+
+def plan_next_move(pos, goal, goblin_pos):
+    pass
+
+
+def move_goblin_towards_agent(goblin_pos, pos):
+    #TODO: Sasmit's implementation
+    pass
+
+
+if __name__ == "__main__":
+    # Initialize the game
+    game = GridGame(cell_height=50, cell_width=50, render_delay=0.2)
+
+    # Example goal and goblin positions
+    goal = [5, 5]
+    goblin_pos = [3, 3]
+
+    running = False #false for now, cuz it keeps loading a lot
+    while running:
+        next_move = plan_next_move(game.pos, goal, goblin_pos)
+
+
+        game.display_move(next_move)
+
+
+        goblin_pos = move_goblin_towards_agent(goblin_pos, game.pos)
+
+
+        if game.pos == goal:
+            print("Goal reached!")
+            running = False
