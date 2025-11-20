@@ -1,51 +1,349 @@
+
+# import pygame
+# from pygame import Rect
+# import time
+
+# class GridGame:
+#     def __init__(self, cell_height=30, cell_width=30, render_delay=0.1):
+#         self.cell_height = cell_height
+#         self.cell_width = cell_width
+#         self.screen_size = (1500, 800)
+#         self.delay = render_delay
+
+#         # Colors
+#         self.black = (0, 0, 0)
+#         self.white = (255, 255, 255)
+
+#         # Player position
+#         self.pos = [0, 0]
+
+#         # Pygame setup
+#         pygame.init()
+#         pygame.display.init()
+#         self.screen = pygame.display.set_mode(self.screen_size)
+#         pygame.display.set_caption("Maze")
+#         self.clock = pygame.time.Clock()
+
+#     def _draw_grid(self):
+#         number_of_rows = self.screen_size[1] // self.cell_height
+#         number_of_columns = self.screen_size[0] // self.cell_width
+
+#         for row in range(number_of_rows):
+#             for col in range(number_of_columns):
+
+#                 rect = Rect(col * self.cell_width,
+#                             row * self.cell_height,
+#                             self.cell_width,
+#                             self.cell_height)
+                
+#                 pygame.draw.rect(self.screen, self.white, rect)
+#                 pygame.draw.rect(self.screen, self.black, rect, width=1)
+
+
+#     def execute(self, command):
+#         #TODO: needs to be implemented
+#         if command == "UP" and self.pos[1] > 0:
+#             self.pos[1] -= 1
+#         elif command == "DOWN" and self.pos[1] < self.grid_size - 1:
+#             self.pos[1] += 1
+#         elif command == "LEFT" and self.pos[0] > 0:
+#             self.pos[0] -= 1
+#         elif command == "RIGHT" and self.pos[0] < self.grid_size - 1:
+#             self.pos[0] += 1
+
+#     def display_move(self, move):
+#         self.execute(move)  # update agent position
+#         self._draw_grid()  # redraw the grid
+#         time.sleep(self.delay)
+
+
+# game = GridGame()
+# if __name__ == "__main__":
+#     running = True
+#     while running:
+#         for event in pygame.event.get():
+#             if event.type == pygame.QUIT:
+#                 running = False
+
+#         game._draw_grid()
+#         pygame.display.flip()
+#         #game._loop()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# import pygame
+# from pygame import Rect
+# import time
+
+# class GridGame:
+#     def __init__(self, cell_height=10, cell_width=10, render_delay=0.1):
+#         self.cell_height = cell_height
+#         self.cell_width = cell_width
+#         self.screen_size = (1400, 800)
+#         self.delay = render_delay
+
+#         # Colors
+#         self.black = (0, 0, 0)
+
+#         # Player position
+#         self.pos = [0, 0]
+
+#         # Pygame setup
+#         pygame.init()
+#         pygame.display.init()
+#         self.screen = pygame.display.set_mode(self.screen_size)
+#         pygame.display.set_caption("Maze")
+#         self.clock = pygame.time.Clock()
+
+#     def _draw_grid(self):
+#         # Fill background
+#         self.screen.fill((255, 255, 255))
+        
+#         number_of_rows = self.screen_size[1] // self.cell_height
+#         number_of_columns = self.screen_size[0] // self.cell_width
+
+#         for row in range(number_of_rows):
+#             for col in range(number_of_columns):
+#                 # Draw each cell with border
+#                 rect = Rect(col * self.cell_width,
+#                             row * self.cell_height,
+#                             self.cell_width,
+#                             self.cell_height)
+#                 # Fill the cell with white
+#                 pygame.draw.rect(self.screen, (255, 255, 255), rect)
+#                 # Draw black border around each cell
+#                 pygame.draw.rect(self.screen, self.black, rect, width=1)
+        
+#         pygame.display.flip()
+
+
+#     def execute(self, command):
+#         if command == "UP" and self.pos[1] > 0:
+#             self.pos[1] -= 1
+#         elif command == "DOWN" and self.pos[1] < self.grid_size - 1:
+#             self.pos[1] += 1
+#         elif command == "LEFT" and self.pos[0] > 0:
+#             self.pos[0] -= 1
+#         elif command == "RIGHT" and self.pos[0] < self.grid_size - 1:
+#             self.pos[0] += 1
+
+#     def display_move(self, move):
+#         self.execute(move)  # update agent position
+#         self._draw_grid()  # redraw the grid
+#         time.sleep(self.delay)
+
+
+# game = GridGame()
+
+
+# def plan_next_move(pos, goal, goblin_pos):
+#     pass
+
+
+# def move_goblin_towards_agent(goblin_pos, pos):
+#     pass
+
+
+# if __name__ == "__main__":
+#     # Initialize the game
+#     game = GridGame(cell_height=50, cell_width=50, render_delay=0.2)
+
+#     # Example goal and goblin positions
+#     goal = [5, 5]
+#     goblin_pos = [3, 3]
+
+#     game._draw_grid()
+
+#     running = True #false for now, cuz it keeps loading a lot
+#     while running:
+#         # next_move = plan_next_move(game.pos, goal, goblin_pos)
+
+#         # game.display_move(next_move)
+
+#         # goblin_pos = move_goblin_towards_agent(goblin_pos, game.pos)
+
+#         game._draw_grid()
+
+
+#         if game.pos == goal:
+#             print("Goal reached!")
+#             running = False
+
+
+
+
+
+
+
+
+
+
 import pygame
+from pygame import Rect
 import time
+import random
 
 class GridGame:
-    def __init__(self, grid_size=15, cell_size=40, render_delay=0.1):
-        self.grid_size = grid_size
+    def __init__(self, rows=50, cols=50, cell_size=14, render_delay=0.1):
+        self.rows = rows
+        self.cols = cols
         self.cell_size = cell_size
-        self.screen_size = grid_size * cell_size
+        self.screen_size = self.screen_size = (cols * cell_size, rows * cell_size)
         self.delay = render_delay
 
         # Colors
-        self.black = (0, 0, 0)
-        self.white = (255, 255, 255)
-        self.gray = (200, 200, 200)
-        self.player_color = (0, 255, 0)
+        self.COLOR_WALL = (139, 69, 19)     # brown
+        self.COLOR_FLOOR = (169, 169, 169)  # gray
+        self.COLOR_PLAYER = (255, 255, 0)   # yellow
+        self.COLOR_GOBLIN = (0, 255, 0)     # green
+        self.COLOR_EXIT = (255, 0, 0)       # red
+        self.COLOR_GRID = (0, 0, 0)         # black grid lines
+        self.BLACK = self.COLOR_GRID
+        self.WHITE = (255, 255, 255)        # white
 
         # Player position
         self.pos = [0, 0]
 
         # Pygame setup
         pygame.init()
-        self.screen = pygame.display.set_mode((self.screen_size, self.screen_size))
-        pygame.display.set_caption("Simple Grid Game")
+        pygame.display.init()
+        self.screen = pygame.display.set_mode(self.screen_size)
+        pygame.display.set_caption("Maze")
         self.clock = pygame.time.Clock()
 
+        # Generate dungeon map
+        self.grid = self._generate_maze()
+
+        # Find player and exit
+        self.player_pos = self._find_spawn()
+        self.exit_pos = self._place_exit()
+        self.goblin_pos = self._place_goblin()
+
     def _draw_grid(self):
-        #TODO: needs to be implemented
-        
-        pass
+        for row in range(self.rows):
+            for col in range(self.cols):
+                rect = Rect(col * self.cell_size,
+                            row * self.cell_size,
+                            self.cell_size,
+                            self.cell_size)
+
+                # Choose color based on tile type
+                tile = self.grid[row][col]
+                if [row, col] == self.player_pos:
+                    color = self.COLOR_PLAYER
+                elif [row, col] == self.exit_pos:
+                    color = self.COLOR_EXIT
+                elif [row, col] == self.goblin_pos:
+                    color = self.COLOR_GOBLIN
+                elif tile == "W":
+                    color = self.COLOR_WALL
+                else:
+                    color = self.COLOR_FLOOR
+
+                pygame.draw.rect(self.screen, color, rect)
+                pygame.draw.rect(self.screen, self.COLOR_GRID, rect, width=1)
+
+    def _generate_maze(self):
+        """
+        Generates a dungeon/map by building a 2D python list.
+        The list is of size self.rows by self.cols. This method
+        generates each entry of the list 1 at a time. For each
+        entry, it will assign it the string "F" with 0.75 probability,
+        denoting that cell as a floor. With 0.25 probability, it will
+        assign it the string "W", denoting it as a Wall.
+        """
+        grid = []
+        for row in range(self.rows):
+            grid_row = []
+            for col in range(self.cols):
+                # Randomly choose wall or floor
+                if random.random() < 0.25:  # 25% chance of wall
+                    grid_row.append("W")
+                else:
+                    grid_row.append("F")
+            grid.append(grid_row)
+        return grid
+    
+
+    def _find_spawn(self):
+        """
+        Locates all valid spawning cells for the agent in the left region
+        of the dungeon/maze generated by _generate_maze(), and then randomly selects one as the
+        spawn point. A valid spawn cell is any cell that isn't a wall.
+        """
+        potential_spawns = []
+        for row in range(self.rows):
+            for col in range(5):  # only check first 5 columns
+                if self.grid[row][col] == "F":
+                    potential_spawns.append([row, col])
+        return random.choice(potential_spawns)
+    
+    def _place_exit(self):
+        """
+        Locates all valid exit cells for the agent in the right region
+        of the dungeon/maze generated by _generate_maze(), and then randomly selects one as the
+        exit point. A valid exit cell is any cell that isn't a wall.
+        """
+        potential_exits = []
+        for row in range(self.rows - 1, -1, -1):
+            for col in range(self.cols - 1, self.cols - 6, -1):
+                if self.grid[row][col] == "F":
+                    potential_exits.append([row, col])
+        return random.choice(potential_exits)
+    
+    def _place_goblin(self):
+        """
+        Locates all valid goblin spawn cells in the middle region of the
+        dungeon/maze generated by _generate_maze(), and then randomly selects
+        one as the goblin spawn. A valid spawn cell is any cell that isn't a wall.
+        """
+        potential_goblin_spawns = []
+        for row in range(self.rows // 3, 2 * self.rows // 3):
+            for col in range(self.cols // 3, 2 * self.cols // 3):
+                if self.grid[row][col] == "F":
+                    potential_goblin_spawns.append([row, col])
+        return random.choice(potential_goblin_spawns)
+
 
     def execute(self, command):
         #TODO: needs to be implemented
-        if command == "UP" and self.pos[1] > 0:
-            self.pos[1] -= 1
-        elif command == "DOWN" and self.pos[1] < self.grid_size - 1:
-            self.pos[1] += 1
-        elif command == "LEFT" and self.pos[0] > 0:
-            self.pos[0] -= 1
-        elif command == "RIGHT" and self.pos[0] < self.grid_size - 1:
-            self.pos[0] += 1 
-         
+        pass
 
     def _loop(self):
         #TODO: needs to be implemented
-
         pass
 
+
+game = GridGame()
 if __name__ == "__main__":
-    game = GridGame(grid_size=6)
-    game._draw_grid()
-    ##game._loop()
+    running = True
+    while running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+
+        game._draw_grid()
+        pygame.display.flip()
+        game._loop()
