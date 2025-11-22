@@ -1,4 +1,5 @@
 import random
+from heapq import heappush
 
 import pygame
 from pygame import Rect
@@ -186,7 +187,7 @@ def manhattan_distance_bad(pos1, pos2):
     dy = abs(pos1[1] - pos2[1])
     manhattan = dx + dy
 
-    noise = random.uniform(0.2, 0.4) * manhattan
+    noise = random.uniform(0.2, 0.4) * manhattan #can change the noise error, depending on visualization
     return manhattan + noise
 
 
@@ -196,7 +197,7 @@ def distance(pos):
 
 def move_goblin_towards_agent(self, random_chance=20):
     # TODO: Sasmit's implementation
-    # manhatten distance to agent heuristic, but random chance it moves to random place
+    # manhattan distance to agent heuristic, but random chance it moves to random place
 
     if random.randint(1, 100) <= random_chance:
         goblin_x, goblin_y = self.goblin_pos
@@ -215,6 +216,18 @@ def move_goblin_towards_agent(self, random_chance=20):
         if valid_moves:
             self.goblin_pos = random.choice(valid_moves)
         return self.goblin_pos
+
+    #A* implementation:
+    start = tuple(self.goblin_pos)
+    goal = tuple(self.player_pos)
+
+    open_set = []
+    heappush(open_set, (manhattan_distance_bad(start, goal), 0, start, [start]))
+
+    visited = set()
+
+
+
 
 
 if __name__ == "__main__":
