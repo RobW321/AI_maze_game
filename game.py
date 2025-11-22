@@ -181,7 +181,7 @@ def plan_next_move(pos, goal, goblin_pos):
     pass
 
 
-def manhattan_distance(pos1, pos2):
+def manhattan_distance_bad(pos1, pos2):
     dx = abs(pos1[0] - pos2[0])
     dy = abs(pos1[1] - pos2[1])
     manhattan = dx + dy
@@ -191,36 +191,30 @@ def manhattan_distance(pos1, pos2):
 
 
 def distance(pos):
-    return manhattan_distance(pos[0], pos[1])
+    return manhattan_distance_bad(pos[0], pos[1])
 
 
 def move_goblin_towards_agent(self, random_chance=20):
     # TODO: Sasmit's implementation
     # manhatten distance to agent heuristic, but random chance it moves to random place
-    goblin_x, goblin_y = self.goblin_pos
-    heuristic = manhattan_distance(goblin_x, goblin_y)
-
-    potential_moves = [
-        (goblin_x, goblin_y - 1),  # Up
-        (goblin_x, goblin_y + 1),  # Down
-        (goblin_x - 1, goblin_y),  # Left
-        (goblin_x + 1, goblin_y)  # Right
-    ]
-
-    valid_moves = [
-        (x, y) for x, y in potential_moves
-        if 0 <= x < self.rows and 0 <= y < self.cols and self.grid[x][y] != "WALL"
-    ]
 
     if random.randint(1, 100) <= random_chance:
-        # Move to a random valid position
-        self.goblin_pos = random.choice(valid_moves)
-    else:
-        # Move towards the player (choose the move with the smallest Manhattan distance)
+        goblin_x, goblin_y = self.goblin_pos
+        potential_moves = [
+            [goblin_x - 1, goblin_y],  # Up
+            [goblin_x + 1, goblin_y],  # Down
+            [goblin_x, goblin_y - 1],  # Left
+            [goblin_x, goblin_y + 1]  # Right
+        ]
 
-        self.goblin_pos = min(valid_moves, key=distance)
+        valid_moves = [
+            [x, y] for x, y in potential_moves
+            if 0 <= x < self.rows and 0 <= y < self.cols and self.grid[x][y] != "W"
+        ]
 
-    return self.goblin_pos
+        if valid_moves:
+            self.goblin_pos = random.choice(valid_moves)
+        return self.goblin_pos
 
 
 if __name__ == "__main__":
