@@ -182,7 +182,12 @@ def plan_next_move(pos, goal, goblin_pos):
 
 
 def manhattan_distance(pos1, pos2):
-    return abs(pos1[0] - pos2[0]) + abs(pos1[1] - pos2[1])
+    dx = abs(pos1[0] - pos2[0])
+    dy = abs(pos1[1] - pos2[1])
+    manhattan = dx + dy
+
+    noise = random.uniform(0.2, 0.4) * manhattan
+    return manhattan + noise
 
 
 def distance(pos):
