@@ -1,410 +1,239 @@
-import time
-import pygame
-import numpy as np
 import random
 
-class ShapePlacementGrid:
-    def __init__(self, GUI=True, render_delay_sec=0.1, gs=6, num_colored_boxes=5):
-        # Constants
-        self.gridSize = gs
-        self.cellSize = 40
-        self.screenSize = self.gridSize * self.cellSize
-        self.fps = 60
-        self.sleeptime = render_delay_sec
+import pygame
+from pygame import Rect
+import time
 
-        # Basic color definitions
-        self.black = (0, 0, 0)
-        self.white = (255, 255, 255)
+from copy import deepcopy
 
-        # Color palette for shapes
-        self.colors = ['#988BD0', '#504136', '#457F6E', '#F7C59F']  # Indigo, Taupe, Viridian, Peach
 
-        # Mapping of color indices to color names (for debugging purposes)
-        self.colorIdxToName = {0: "Indigo", 1: "Taupe", 2: "Viridian", 3: "Peach"}
+class GridGame:
+    def __init__(self, rows=50, cols=50, cell_size=14, render_delay=0.1):
+        self.rows = rows
+        self.cols = cols
+        self.cell_size = cell_size
+        self.screen_size = self.screen_size = (cols * cell_size, rows * cell_size)
+        self.delay = render_delay
 
-        # Shape definitions represented by arrays
-        self.shapes = [
-            np.array([[1]]),  # 1x1 square
-            np.array([[1, 0], [0, 1]]),  # 2x2 square with diagonal holes
-            np.array([[0, 1], [1, 0]]),  # 2x2 square with diagonal holes (transpose)
-            np.array([[1, 0], [0, 1], [1, 0], [0, 1]]),  # 2x4 rectangle with holes
-            np.array([[0, 1], [1, 0], [0, 1], [1, 0]]),  # 2x4 rectangle with holes (transpose)
-            np.array([[1, 0, 1, 0], [0, 1, 0, 1]]),      # 4x2 rectangle with alternating holes
-            np.array([[0, 1, 0, 1], [1, 0, 1, 0]]),      # 4x2 rectangle with alternating holes (transpose)
-            np.array([[0, 1, 0], [1, 0, 1]]),            # Sparse T-shape
-            np.array([[1, 0, 1], [0, 1, 0]])             # Sparse T-shape (reversed)
-        ]
+        # Colors
+        self.COLOR_WALL = (139, 69, 19)  # brown
+        self.COLOR_FLOOR = (169, 169, 169)  # gray
+        self.COLOR_PLAYER = (255, 255, 0)  # yellow
+        self.COLOR_GOBLIN = (0, 255, 0)  # green
+        self.COLOR_EXIT = (255, 0, 0)  # red
+        self.COLOR_GRID = (0, 0, 0)  # black grid lines
+        self.BLACK = self.COLOR_GRID
+        self.WHITE = (255, 255, 255)  # white
 
-        # Corresponding dimensions of the shapes
-        self.shapesDims = [
-            (1, 1),
-            (2, 2),
-            (2, 2),
-            (2, 4),
-            (2, 4),
-            (4, 2),
-            (4, 2),
-            (3, 2),
-            (3, 2)
-        ]
+        # Player position
+        self.pos = [0, 0]
 
-        # Mapping of shape indices to shape names (for debugging purposes)
-        self.shapesIdxToName = {
-            0: "Square",
-            1: "SquareWithHoles",
-            2: "SquareWithHolesTranspose",
-            3: "RectangleWithHoles",
-            4: "RectangleWithHolesTranspose",
-            5: "RectangleVerticalWithHoles",
-            6: "RectangleVerticalWithHolesTranspose",
-            7: "SparseTShape",
-            8: "SparseTShapeReverse",
-        }
+        # Pygame setup
+        pygame.init()
+        pygame.display.init()
+        self.screen = pygame.display.set_mode(self.screen_size)
+        pygame.display.set_caption("Maze")
+        self.clock = pygame.time.Clock()
 
-        # Global variables (now instance attributes)
-        self.screen = None
-        self.clock = None
-        self.grid = np.full((self.gridSize, self.gridSize), -1)
-        self.currentShapeIndex = 0
-        self.currentColorIndex = 0
-        self.shapePos = [0, 0]
-        self.placedShapes = []
-        self.done = False
+        # Generate dungeon map
+        self.grid = self._generate_maze()
 
-        # Initialize grid with random colored boxes
-        self._addRandomColoredBoxes(self.grid, num_colored_boxes)
+        # Find player and exit
+        self.player_pos = self._find_spawn()
+        self.exit_pos = self._place_exit()
+        self.goblin_pos = self._place_goblin()
 
-        # Initialize the graphical interface (if enabled)
-        if GUI:
-            pygame.init()
-            self.screenSize = self.gridSize * self.cellSize
-            self.screen = pygame.display.set_mode((self.screenSize, self.screenSize))
-            pygame.display.set_caption("Shape Placement Grid")
-            self.clock = pygame.time.Clock()
+        # Generate reward grid
+        self.reward_grid = self._generate_reward_grid()
 
-            self._refresh()
+    def _draw_grid(self):
+        for row in range(self.rows):
+            for col in range(self.cols):
+                rect = Rect(col * self.cell_size,
+                            row * self.cell_size,
+                            self.cell_size,
+                            self.cell_size)
 
-    def execute(self, command='e'):
-        # Command-based environment interaction similar to Gym
-        if command.lower() in ['e', 'export']:
-            new_event = pygame.event.Event(pygame.KEYDOWN, unicode='e', key=ord('e'))
-            try:
-                pygame.event.post(new_event)
-                self._refresh()
-            except:
-                pass
-            return self.shapePos, self.currentShapeIndex, self.currentColorIndex, self.grid, self.placedShapes, self.done
-        if command.lower() in ['w', 'up']:
-            new_event = pygame.event.Event(pygame.KEYDOWN, unicode='w', key=ord('w'))
-            try:
-                pygame.event.post(new_event)
-                self._refresh()
-            except:
-                pass
-            self.shapePos[1] = max(0, self.shapePos[1] - 1)
-        elif command.lower() in ['s', 'down']:
-            self.shapePos[1] = min(self.gridSize - len(self.shapes[self.currentShapeIndex]), self.shapePos[1] + 1)
-            new_event = pygame.event.Event(pygame.KEYDOWN, unicode='s', key=ord('s'))
-            try:
-                pygame.event.post(new_event)
-                self._refresh()
-            except:
-                pass
-        elif command.lower() in ['a', 'left']:
-            self.shapePos[0] = max(0, self.shapePos[0] - 1)
-            new_event = pygame.event.Event(pygame.KEYDOWN, unicode='a', key=ord('a'))
-            try:
-                pygame.event.post(new_event)
-                self._refresh()
-            except:
-                pass
-        elif command.lower() in ['d', 'right']:
-            self.shapePos[0] = min(self.gridSize - len(self.shapes[self.currentShapeIndex][0]), self.shapePos[0] + 1)
-            new_event = pygame.event.Event(pygame.KEYDOWN, unicode='d', key=ord('d'))
-            try:
-                pygame.event.post(new_event)
-                self._refresh()
-            except:
-                pass
-        elif command.lower() in ['p', 'place']:
-            if self.canPlace(self.grid, self.shapes[self.currentShapeIndex], self.shapePos):
-                self._placeShape(self.grid, self.shapes[self.currentShapeIndex], self.shapePos, self.currentColorIndex)
-                self.placedShapes.append((self.currentShapeIndex, self.shapePos.copy(), self.currentColorIndex))
-                self._exportGridState(self.grid)
-                new_event = pygame.event.Event(pygame.KEYDOWN, unicode='p', key=ord('p'))
-                try:
-                    pygame.event.post(new_event)
-                    self._refresh()
-                except:
-                    pass
-                if self.checkGrid(self.grid):
-                    self.done = True
+                # Choose color based on tile type
+                tile = self.grid[row][col]
+                if [row, col] == self.player_pos:
+                    color = self.COLOR_PLAYER
+                elif [row, col] == self.exit_pos:
+                    color = self.COLOR_EXIT
+                elif [row, col] == self.goblin_pos:
+                    color = self.COLOR_GOBLIN
+                elif tile == "W":
+                    color = self.COLOR_WALL
                 else:
-                    self.done = False
-        elif command.lower() in ['h', 'switchshape']:
-            self.currentShapeIndex = (self.currentShapeIndex + 1) % len(self.shapes)
-            currentShapeDimensions = self.shapesDims[self.currentShapeIndex]
-            xXented = self.shapePos[0] + currentShapeDimensions[0]
-            yXetended = self.shapePos[1] + currentShapeDimensions[1]
+                    color = self.COLOR_FLOOR
 
-            if (xXented > self.gridSize and yXetended > self.gridSize):
-                self.shapePos[0] -= (xXented - self.gridSize)
-                self.shapePos[1] -= (yXetended - self.gridSize)
-            elif (yXetended > self.gridSize):
-                self.shapePos[1] -= (yXetended - self.gridSize)
-            elif (xXented > self.gridSize):
-                self.shapePos[0] -= (xXented - self.gridSize)
+                pygame.draw.rect(self.screen, color, rect)
+                pygame.draw.rect(self.screen, self.COLOR_GRID, rect, width=1)
 
-            new_event = pygame.event.Event(pygame.KEYDOWN, unicode='h', key=ord('h'))
+    # pygame.display.flip()
 
-            try:
-                pygame.event.post(new_event)
-                self._refresh()
-            except:
-                pass
-        elif command.lower() in ['k', 'switchcolor']:
-            self.currentColorIndex = (self.currentColorIndex + 1) % len(self.colors)
-            new_event = pygame.event.Event(pygame.KEYDOWN, unicode='k', key=ord('k'))
-            try:
-                pygame.event.post(new_event)
-                self._refresh()
-            except:
-                pass
-        elif command.lower() in ['u', 'undo']:
-            if self.placedShapes:
-                lastShapeIndex, lastShapePos, lastColorIndex = self.placedShapes.pop()
-                self._removeShape(self.grid, self.shapes[lastShapeIndex], lastShapePos)
-                if self.checkGrid(self.grid):
-                    self.done = True
+    def _generate_maze(self):
+        """
+        Generates a dungeon/map by building a 2D python list.
+        The list is of size self.rows by self.cols. This method
+        generates each entry of the list 1 at a time. For each
+        entry, it will assign it the string "F" with 0.75 probability,
+        denoting that cell as a floor. With 0.25 probability, it will
+        assign it the string "W", denoting it as a Wall.
+        """
+        grid = []
+        for row in range(self.rows):
+            grid_row = []
+            for col in range(self.cols):
+                # Randomly choose wall or floor
+                if random.random() < 0.25:  # 25% chance of wall
+                    grid_row.append("W")
                 else:
-                    self.done = False
-                new_event = pygame.event.Event(pygame.KEYDOWN, unicode='u', key=ord('u'))
-                try:
-                    pygame.event.post(new_event)
-                    self._refresh()
-                except:
-                    pass
-
-        return self.shapePos, self.currentShapeIndex, self.currentColorIndex, self.grid, self.placedShapes, self.done
-
-    def canPlace(self, grid, shape, pos):
-        # Does not check for adjacency violations - only checks whether the selected shape fits in the provided position.
-        for i, row in enumerate(shape):
-            for j, cell in enumerate(row):
-                if cell:
-                    if pos[0] + j >= self.gridSize or pos[1] + i >= self.gridSize:
-                        return False
-                    if grid[pos[1] + i, pos[0] + j] != -1:
-                        return False
-        return True
-
-    def checkGrid(self, grid):
-        # Ensure all cells are filled
-        if -1 in grid:
-            return False
-
-        # Check that no adjacent cells have the same color
-        for i in range(self.gridSize):
-            for j in range(self.gridSize):
-                color = grid[i, j]
-                if i > 0 and grid[i - 1, j] == color:
-                    return False
-                if i < self.gridSize - 1 and grid[i + 1, j] == color:
-                    return False
-                if j > 0 and grid[i, j - 1] == color:
-                    return False
-                if j < self.gridSize - 1 and grid[i, j + 1] == color:
-                    return False
-
-        return True
-
-    def getAvailableColor(self, grid, x, y):
-        # Gets the possible available colors given a point on the grid.
-        adjacent_colors = set()
-
-        # Collect colors of adjacent cells
-        if x > 0:
-            adjacent_colors.add(grid[y, x - 1])
-        if x < self.gridSize - 1:
-            adjacent_colors.add(grid[y, x + 1])
-        if y > 0:
-            adjacent_colors.add(grid[y - 1, x])
-        if y < self.gridSize - 1:
-            adjacent_colors.add(grid[y + 1, x])
-
-        # Find available colors that are not adjacent
-        available_colors = [i for i in range(len(self.colors)) if i not in adjacent_colors]
-
-        # Return a random color from the available colors or a fallback random color
-        if available_colors:
-            return random.choice(available_colors)
-        else:
-            return random.randint(0, len(self.colors) - 1)
-
-    # All other methods are private (no requirement for public)
-
-    def _drawGrid(self, screen):
-        for x in range(0, self.screenSize, self.cellSize):
-            for y in range(0, self.screenSize, self.cellSize):
-                rect = pygame.Rect(x, y, self.cellSize, self.cellSize)
-                pygame.draw.rect(screen, self.black, rect, 1)
-
-    def _drawShape(self, screen, shape, color, pos):
-        for i, row in enumerate(shape):
-            for j, cell in enumerate(row):
-                if cell:
-                    rect = pygame.Rect((pos[0] + j) * self.cellSize, (pos[1] + i) * self.cellSize, self.cellSize, self.cellSize)
-                    pygame.draw.rect(screen, color, rect, width=6)
-
-    def _placeShape(self, grid, shape, pos, colorIndex):
-        for i, row in enumerate(shape):
-            for j, cell in enumerate(row):
-                if cell:
-                    grid[pos[1] + i, pos[0] + j] = colorIndex
-
-    def _removeShape(self, grid, shape, pos):
-        for i, row in enumerate(shape):
-            for j, cell in enumerate(row):
-                if cell:
-                    grid[pos[1] + i, pos[0] + j] = -1
-
-    def _exportGridState(self, grid):
-        ## To export the grid for debug purposes.
+                    grid_row.append("F")
+            grid.append(grid_row)
         return grid
 
-    def _importGridState(self, gridState):
-        ## Can be used to import a grid for same atarting conditions from a file.
-        grid = np.array([ord(char) - 65 for char in gridState]).reshape((self.gridSize, self.gridSize))
-        return grid
+    def _find_spawn(self):
+        """
+        Locates all valid spawning cells for the agent in the left region
+        of the dungeon/maze generated by _generate_maze(), and then randomly selects one as the
+        spawn point. A valid spawn cell is any cell that isn't a wall.
+        """
+        potential_spawns = []
+        for row in range(self.rows):
+            for col in range(5):  # only check first 5 columns
+                if self.grid[row][col] == "F":
+                    potential_spawns.append([row, col])
+        return random.choice(potential_spawns)
 
-    def _refresh(self):
-        self.screen.fill(self.white)
-        self._drawGrid(self.screen)
+    def _place_exit(self):
+        """
+        Locates all valid exit cells for the agent in the right region
+        of the dungeon/maze generated by _generate_maze(), and then randomly selects one as the
+        exit point. A valid exit cell is any cell that isn't a wall.
+        """
+        potential_exits = []
+        for row in range(self.rows - 1, -1, -1):
+            for col in range(self.cols - 1, self.cols - 6, -1):
+                if self.grid[row][col] == "F":
+                    potential_exits.append([row, col])
+        return random.choice(potential_exits)
 
-        # Draw the current state of the grid
-        for i in range(self.gridSize):
-            for j in range(self.gridSize):
-                if self.grid[i, j] != -1:
-                    rect = pygame.Rect(j * self.cellSize, i * self.cellSize, self.cellSize, self.cellSize)
-                    pygame.draw.rect(self.screen, self.colors[self.grid[i, j]], rect)
+    def _place_goblin(self):
+        """
+        Locates all valid goblin spawn cells in the middle region of the
+        dungeon/maze generated by _generate_maze(), and then randomly selects
+        one as the goblin spawn. A valid spawn cell is any cell that isn't a wall.
+        """
+        potential_goblin_spawns = []
+        for row in range(self.rows // 3, 2 * self.rows // 3):
+            for col in range(self.cols // 3, 2 * self.cols // 3):
+                if self.grid[row][col] == "F":
+                    potential_goblin_spawns.append([row, col])
+        return random.choice(potential_goblin_spawns)
 
-        # Draw the shape that is currently selected by the user
-        self._drawShape(self.screen, self.shapes[self.currentShapeIndex], self.colors[self.currentColorIndex], self.shapePos)
+    def _generate_reward_grid(self):
+        """
+        This method looks at the maze generated by _generate_maze() and creates
+        a grid of rewards. Rewards on the grid are associated with their respective
+        locations in the maze. For example, the reward stored at row 5 column 3 is
+        the reward for being at row 5 column 3.
+        """
+        if self.grid == None:  # Make sure a maze has been generated first
+            return None
 
-        pygame.display.flip()
-        self.clock.tick(self.fps)
-        time.sleep(self.sleeptime)
+        # Initialize Reward Grid
+        reward_grid = deepcopy(self.grid)
 
-    def _addRandomColoredBoxes(self, grid, num_boxes=5):
-        ## Adds the random colored boxes.
-        empty_positions = list(zip(*np.where(grid == -1)))
-        random_positions = random.sample(empty_positions, min(num_boxes, len(empty_positions)))
+        for row in range(self.rows):
+            for col in range(self.cols):
+                if reward_grid[row][col] == "W":  # -100000 Reward for Walls
+                    reward_grid[row][col] = -100000
+                elif abs(self.goblin_pos[0] - row) <= 5 and abs(
+                        self.goblin_pos[1] - col) <= 5:  # Reward for being near goblin is based on distance
+                    reward_grid[row][col] = min(-10 - abs(self.goblin_pos[0] - 5), -10 - abs(self.goblin_pos[1]))
+                elif [row, col] == self.exit_pos:  # Reward for winning is really large
+                    reward_grid[row][col] == 10000
+                else:
+                    reward_grid[row][col] = 1  # Reward for a normal state is small but positive
+        return reward_grid
 
-        # Place random colored boxes at selected positions
-        for pos in random_positions:
-            color_index = self.getAvailableColor(grid, pos[1], pos[0])
-            grid[pos[0], pos[1]] = color_index
+    def execute(self, command):
+        if command == "UP" and self.pos[1] > 0:
+            self.pos[1] -= 1
+        elif command == "DOWN" and self.pos[1] < self.grid_size - 1:
+            self.pos[1] += 1
+        elif command == "LEFT" and self.pos[0] > 0:
+            self.pos[0] -= 1
+        elif command == "RIGHT" and self.pos[0] < self.grid_size - 1:
+            self.pos[0] += 1
 
-    def _loop_gui(self):
-        ## Main Loop for the GUI
-        running = True
-        while running:
-            self.screen.fill(self.white)
-            self._drawGrid(self.screen)
+    def display_move(self, move):
+        self.execute(move)  # update agent position
+        self._draw_grid()  # redraw the grid
+        time.sleep(self.delay)
 
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    running = False
-                elif event.type == pygame.KEYDOWN:
-                    # Handle key events to move shapes and perform actions
-                    if event.key == pygame.K_w:
-                        self.shapePos[1] = max(0, self.shapePos[1] - 1)
-                    elif event.key == pygame.K_s:
-                        self.shapePos[1] = min(self.gridSize - len(self.shapes[self.currentShapeIndex]), self.shapePos[1] + 1)
-                    elif event.key == pygame.K_a:
-                        self.shapePos[0] = max(0, self.shapePos[0] - 1)
-                    elif event.key == pygame.K_d:
-                        self.shapePos[0] = min(self.gridSize - len(self.shapes[self.currentShapeIndex][0]), self.shapePos[0] + 1)
-                    elif event.key == pygame.K_p:  # Place the shape on the grid
-                        if self.canPlace(self.grid, self.shapes[self.currentShapeIndex], self.shapePos):
-                            self._placeShape(self.grid, self.shapes[self.currentShapeIndex], self.shapePos, self.currentColorIndex)
-                            self.placedShapes.append((self.currentShapeIndex, self.shapePos.copy(), self.currentColorIndex))
-                            if self.checkGrid(self.grid):
-                                # Calculate and display score based on the number of shapes used
-                                score = (self.gridSize**2) / len(self.placedShapes)
-                                print("All cells are covered with no overlaps and no adjacent same colors! Your score is:", score)
-                            else:
-                                print("Grid conditions not met!")
-                    elif event.key == pygame.K_h:  # Switch to the next shape
-                        self.currentShapeIndex = (self.currentShapeIndex + 1) % len(self.shapes)
-                        currentShapeDimensions = self.shapesDims[self.currentShapeIndex]
-                        xXented = self.shapePos[0] + currentShapeDimensions[0]
-                        yXetended = self.shapePos[1] + currentShapeDimensions[1]
 
-                        if (xXented > self.gridSize and yXetended > self.gridSize):
-                            self.shapePos[0] -= (xXented - self.gridSize)
-                            self.shapePos[1] -= (yXetended - self.gridSize)
-                        elif (yXetended > self.gridSize):
-                            self.shapePos[1] -= (yXetended - self.gridSize)
-                        elif (xXented > self.gridSize):
-                            self.shapePos[0] -= (xXented - self.gridSize)
+game = GridGame()
 
-                        print("Current shape", self.shapesIdxToName[self.currentShapeIndex])
-                    elif event.key == pygame.K_k:  # Switch to the next color
-                        self.currentColorIndex = (self.currentColorIndex + 1) % len(self.colors)
-                    elif event.key == pygame.K_u:  # Undo the last placed shape
-                        if self.placedShapes:
-                            lastShapeIndex, lastShapePos, lastColorIndex = self.placedShapes.pop()
-                            self._removeShape(self.grid, self.shapes[lastShapeIndex], lastShapePos)
-                    elif event.key == pygame.K_e:  # Export the current grid state
-                        gridState = self._exportGridState(self.grid)
-                        print("Exported Grid State: \n", gridState)
-                        print("Placed Shapes:", self.placedShapes)
-                    elif event.key == pygame.K_i:  # Import a dummy grid state (for testing)
-                        dummyGridState = self._exportGridState(np.random.randint(-1, 4, size=(self.gridSize, self.gridSize)))
-                        self.grid = self._importGridState(dummyGridState)
-                        self.placedShapes.clear()  # Clear history since we are importing a new state
 
-            # Draw all placed shapes
-            for i in range(self.gridSize):
-                for j in range(self.gridSize):
-                    if self.grid[i, j] != -1:
-                        rect = pygame.Rect(j * self.cellSize, i * self.cellSize, self.cellSize, self.cellSize)
-                        pygame.draw.rect(self.screen, self.colors[self.grid[i, j]], rect)
+def plan_next_move(pos, goal, goblin_pos):
+    pass
 
-            # Draw the current shape
-            self._drawShape(self.screen, self.shapes[self.currentShapeIndex], self.colors[self.currentColorIndex], self.shapePos)
 
-            pygame.display.flip()
-            self.clock.tick(self.fps)
+def manhattan_distance(pos1, pos2):
+    return abs(pos1[0] - pos2[0]) + abs(pos1[1] - pos2[1])
 
-        pygame.quit()
 
-    def _printGridState(self, grid):
-        ## Utility method. Can be used for debugging.
-        for row in grid:
-            print(' '.join(f'{cell:2}' for cell in row))
-        print()
+def distance(pos):
+    return manhattan_distance(pos[0], pos[1])
 
-    def _printControls(self):
-        ## Prints the controls for manual control
-        print("W/A/S/D to move the shapes.")
-        print("H to change the shape.")
-        print("K to change the color.")
-        print("P to place the shape.")
-        print("U to undo the last placed shape.")
-        print("E to print the grid state from GUI to terminal.")
-        print("I to import a dummy grid state.")
-        print("Q to quit (terminal mode only).")
-        print("Press any key to continue")
 
-    def _main(self):
-        ## Allows manual control over the environment.
-        self._loop_gui()
+def move_goblin_towards_agent(self, random_chance=20):
+    # TODO: Sasmit's implementation
+    # manhatten distance to agent heuristic, but random chance it moves to random place
+    goblin_x, goblin_y = self.goblin_pos
+    heuristic = manhattan_distance(goblin_x, goblin_y)
+
+    potential_moves = [
+        (goblin_x, goblin_y - 1),  # Up
+        (goblin_x, goblin_y + 1),  # Down
+        (goblin_x - 1, goblin_y),  # Left
+        (goblin_x + 1, goblin_y)  # Right
+    ]
+
+    valid_moves = [
+        (x, y) for x, y in potential_moves
+        if 0 <= x < self.rows and 0 <= y < self.cols and self.grid[x][y] != "WALL"
+    ]
+
+    if random.randint(1, 100) <= random_chance:
+        # Move to a random valid position
+        self.goblin_pos = random.choice(valid_moves)
+    else:
+        # Move towards the player (choose the move with the smallest Manhattan distance)
+
+        self.goblin_pos = min(valid_moves, key=distance)
+
+    return self.goblin_pos
 
 
 if __name__ == "__main__":
-    # printControls() and main() now encapsulated in the class:
-    game = ShapePlacementGrid(True, render_delay_sec=0.1, gs=6, num_colored_boxes=5)
-    game._printControls()
-    game._main()
+    # Initialize the game
+    game = GridGame(rows=50, cols=50, cell_size=14, render_delay=0.1)
+
+    # Example goal and goblin positions
+    goal = [5, 5]
+    goblin_pos = [3, 3]
+
+    running = False  # false for now, cuz it keeps loading a lot
+    while running:
+        next_move = plan_next_move(game.pos, goal, goblin_pos)
+
+        game.display_move(next_move)
+
+        goblin_pos = move_goblin_towards_agent(goblin_pos, game.pos)
+
+        if game.pos == goal:
+            print("Goal reached!")
+            running = False
