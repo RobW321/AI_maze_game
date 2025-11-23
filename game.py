@@ -1,5 +1,6 @@
 from heapq import heappush, heappop
 from random import random
+import random
 
 import pygame
 from pygame import Rect
@@ -272,11 +273,11 @@ def manhattan_distance_bad(pos1, pos2):
 def distance(pos):
     return manhattan_distance_bad(pos[0], pos[1])
 
-def move_goblin_towards_agent(self, random_chance = 20):
+def move_goblin_towards_agent(self, random_chance):
     # manhattan distance to agent heuristic, but random chance it moves to random place
 
     if random.randint(1, 100) <= random_chance:
-        goblin_x, goblin_y = self.goblin_pos
+        goblin_x, goblin_y = self.goblin_pos 
         potential_moves = [
             [goblin_x - 1, goblin_y],  # Up
             [goblin_x + 1, goblin_y],  # Down
@@ -356,9 +357,9 @@ if __name__ == "__main__":
     while running:
         next_move = plan_next_move(game.player_pos, goal, goblin_pos, grid=game.grid)
 
-        game.display_move(next_move)
+        game.display_move(next_move)  
 
-        goblin_pos = move_goblin_towards_agent(goblin_pos, game.player_pos)
+        goblin_pos = move_goblin_towards_agent(game, 20)
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -380,6 +381,9 @@ if __name__ == "__main__":
 
         if game.player_pos == goal:
             print("Goal reached!")
+            running = False
+        if game.player_pos == goblin_pos:
+            print("Caught by goblin!")
             running = False
 
 
