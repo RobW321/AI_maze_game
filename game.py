@@ -196,7 +196,6 @@ def distance(pos):
 
 
 def move_goblin_towards_agent(self, random_chance=20):
-    # TODO: Sasmit's implementation
     # manhattan distance to agent heuristic, but random chance it moves to random place
 
     if random.randint(1, 100) <= random_chance:
@@ -280,9 +279,7 @@ if __name__ == "__main__":
 
     running = False  # false for now, cuz it keeps loading a lot
     while running:
-        next_move = plan_next_move(game.pos, goal, goblin_pos)
-
-        game.display_move(next_move)
+        game.display_move(plan_next_move(game.pos, goal, goblin_pos))
 
         goblin_pos = move_goblin_towards_agent(goblin_pos, game.pos)
 
