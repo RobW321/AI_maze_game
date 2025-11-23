@@ -1,5 +1,5 @@
 import random
-from heapq import heappush
+from heapq import heappush, heappop
 
 import pygame
 from pygame import Rect
@@ -225,6 +225,46 @@ def move_goblin_towards_agent(self, random_chance=20):
     heappush(open_set, (manhattan_distance_bad(start, goal), 0, start, [start]))
 
     visited = set()
+
+    while open_set:
+        f_score, g_score, current, path = heappop(open_set)
+
+        # If we reached the agent, return only the first move in the path
+        if current == goal:
+            if len(path) > 1:
+                # Take only the first step from the path
+                self.goblin_pos = list(path[1])
+            return self.goblin_pos
+
+        if current in visited:
+            continue
+        visited.add(current)
+
+        # Explore possible neighbors
+        x, y = current
+        neighbors = [
+            (x - 1, y),  # Up
+            (x + 1, y),  # Down
+            (x, y - 1),  # Left
+            (x, y + 1)  # Right
+        ]
+
+        for neighbor in neighbors:
+            n_x, n_y = neighbor
+
+            # Check if neighbor is valid
+            if (0 <= n_x < self.rows and
+                    0 <= n_y < self.cols and
+                    self.grid[n_x][n_y] != "W" and
+                    neighbor not in visited):
+                new_g_score = g_score + 1
+                new_f_score = new_g_score + manhattan_distance_bad(neighbor, goal)
+                new_path = path + [neighbor]
+
+                heappush(open_set, (new_f_score, new_g_score, neighbor, new_path))
+
+        # If no path found, the goblin stays in place
+    return self.goblin_pos
 
 
 
