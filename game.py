@@ -169,6 +169,22 @@ class GridGame:
         elif command == "RIGHT" and self.player_pos[1] < self.cols - 1 and self.grid[self.player_pos[0]][self.player_pos[1] + 1] != "W":
             self.player_pos[1] += 1
 
+    def move_goblin(self, command):
+        if command is None:
+            return
+
+        if command == "UP" and self.goblin_pos[0] > 0 and self.grid[self.goblin_pos[0] - 1][self.goblin_pos[1]] != "W":
+            self.goblin_pos[0] -= 1
+        elif command == "DOWN" and self.goblin_pos[0] < self.rows - 1 and self.grid[self.goblin_pos[0] + 1][
+            self.goblin_pos[1]] != "W":
+            self.goblin_pos[0] += 1
+        elif command == "LEFT" and self.goblin_pos[1] > 0 and self.grid[self.goblin_pos[0]][
+            self.goblin_pos[1] - 1] != "W":
+            self.goblin_pos[1] -= 1
+        elif command == "RIGHT" and self.goblin_pos[1] < self.cols - 1 and self.grid[self.goblin_pos[0]][
+            self.goblin_pos[1] + 1] != "W":
+            self.goblin_pos[1] += 1
+
     def display_move(self, move):
         self.execute(move)  # update agent position
         self._draw_grid()  # redraw the grid
@@ -294,20 +310,20 @@ def move_goblin_towards_agent(self, random_chance):
     if random.randint(1, 100) <= random_chance:
         goblin_row, goblin_column = self.goblin_pos
         potential_moves = [
-            [goblin_row - 1, goblin_column],  # Up
-            [goblin_row + 1, goblin_column],  # Down
-            [goblin_row, goblin_column - 1],  # Left
-            [goblin_row, goblin_column + 1]  # Right
+            ([goblin_row - 1, goblin_column], "UP"),
+            ([goblin_row + 1, goblin_column], "DOWN"),
+            ([goblin_row, goblin_column - 1], "LEFT"),
+            ([goblin_row, goblin_column + 1], "RIGHT")
         ]
 
         valid_moves = [
-            [x, y] for x, y in potential_moves
-            if 0 <= x < self.rows and 0 <= y < self.cols and self.grid[x][y] != "W"
+            cmd for pos, cmd in potential_moves
+            if 0 <= pos[0] < self.rows and 0 <= pos[1] < self.cols and self.grid[pos[0]][pos[1]] != "W"
         ]
 
         if valid_moves:
-            self.goblin_pos = random.choice(valid_moves)
-        return self.goblin_pos
+            return random.choice(valid_moves)
+        return None #No random moves
 
     # A* implementation:
     start = tuple(self.goblin_pos)
@@ -325,8 +341,18 @@ def move_goblin_towards_agent(self, random_chance):
         if current == player_position:
             if len(path) > 1:
                 # Take only the first step from the path
-                self.goblin_pos = list(path[1])
-            return self.goblin_pos
+                next_pos = path[1]
+                current_pos = self.goblin_pos
+
+                if next_pos[0] < current_pos[0]:
+                    return "UP"
+                elif next_pos[0] > current_pos[0]:
+                    return "DOWN"
+                elif next_pos[1] < current_pos[1]:
+                    return "LEFT"
+                elif next_pos[1] > current_pos[1]:
+                    return "RIGHT"
+                return None  # Already at goal
 
         if current in visited:
             continue
@@ -342,12 +368,12 @@ def move_goblin_towards_agent(self, random_chance):
         ]
 
         for neighbor in neighbors:
-            n_x, n_y = neighbor
+            n_row, n_column = neighbor
 
             # Check if neighbor is valid
-            if (0 <= n_x < self.rows and
-                    0 <= n_y < self.cols and
-                    self.grid[n_x][n_y] != "W" and
+            if (0 <= n_row < self.rows and
+                    0 <= n_column < self.cols and
+                    self.grid[n_row][n_column] != "W" and
                     neighbor not in visited):
                 new_g_score = g_score + 1
                 new_f_score = new_g_score + manhattan_distance_bad(neighbor, player_position)
@@ -356,7 +382,7 @@ def move_goblin_towards_agent(self, random_chance):
                 heappush(open_set, (new_f_score, new_g_score, neighbor, new_path))
 
     # If no path found, the goblin stays in place
-    return self.goblin_pos
+    return None
 
 if __name__ == "__main__":
     # Initialize the game
@@ -371,9 +397,10 @@ if __name__ == "__main__":
     while running:
         next_move = plan_next_move(game.player_pos, goal, goblin_pos, grid=game.grid)
 
-        game.display_move(next_move)  
+        game.display_move(next_move)
 
-        goblin_pos = move_goblin_towards_agent(game, 20)
+        goblin_move = move_goblin_towards_agent(game, 20)
+        game.move_goblin(goblin_move)
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
