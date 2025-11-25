@@ -270,9 +270,6 @@ def manhattan_distance_bad(pos1, pos2):
    noise = random.uniform(0.2, 0.4) * manhattan #can change the noise error, depending on visualization
    return manhattan + noise
 
-def distance(pos):
-    return manhattan_distance_bad(pos[0], pos[1])
-
 def move_goblin_towards_agent(self, random_chance):
     # manhattan distance to agent heuristic, but random chance it moves to random place
 
