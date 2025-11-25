@@ -360,7 +360,6 @@ def move_goblin_towards_agent(self, random_chance):
 
 if __name__ == "__main__":
     # Initialize the game
-    #game = GridGame(cell_height=50, cell_width=50, render_delay=0.2)
     game = GridGame(rows=50, cols=50, cell_size=14, render_delay=0.2)
 
 
@@ -368,7 +367,7 @@ if __name__ == "__main__":
     goal = game.exit_pos
     goblin_pos = game.goblin_pos
 
-    running = True #false for now, cuz it keeps loading a lot
+    running = True
     while running:
         next_move = plan_next_move(game.player_pos, goal, goblin_pos, grid=game.grid)
 
