@@ -2,6 +2,10 @@
 
 This repository contains a grid-based maze navigation system built with Pygame, where an agent navigates through a maze toward a goal using the A* search algorithm. The project also includes keyboard control functionality and an `execute` function to step the agent forward.
 
+## Game Objective
+
+Navigate the agent(in yellow) from the left side of the maze to the red exit on the right side while avoiding the green agent.
+
 ## Features
 
 * **Pygame-based visualization** of a maze grid.
