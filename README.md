@@ -72,13 +72,3 @@ You can modify:
 * Agent behavior in `agent.py`
 * Rendering colors, grid size, and speed in `main.py`
 
-## Future Improvements
-
-* Add Dijkstra or Greedy Best-First as alternative modes.
-* Add random maze generator.
-* Add support for multiple agents.
-* Add scoring or reward system for reinforcement learning.
-
----
-
-If you'd like, I can also generate a **GIF demo**, **flowchart**, or **architecture diagram** for the README.
