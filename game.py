@@ -292,12 +292,12 @@ def move_goblin_towards_agent(self, random_chance):
     """
 
     if random.randint(1, 100) <= random_chance:
-        goblin_x, goblin_y = self.goblin_pos 
+        goblin_row, goblin_column = self.goblin_pos
         potential_moves = [
-            [goblin_x - 1, goblin_y],  # Up
-            [goblin_x + 1, goblin_y],  # Down
-            [goblin_x, goblin_y - 1],  # Left
-            [goblin_x, goblin_y + 1]  # Right
+            [goblin_row - 1, goblin_column],  # Up
+            [goblin_row + 1, goblin_column],  # Down
+            [goblin_row, goblin_column - 1],  # Left
+            [goblin_row, goblin_column + 1]  # Right
         ]
 
         valid_moves = [
@@ -333,12 +333,12 @@ def move_goblin_towards_agent(self, random_chance):
         visited.add(current)
 
         # Explore possible neighbors
-        x, y = current
+        row, column = current
         neighbors = [
-            (x - 1, y),  # Up
-            (x + 1, y),  # Down
-            (x, y - 1),  # Left
-            (x, y + 1)  # Right
+            (row - 1, column),  # Up
+            (row + 1, column),  # Down
+            (row, column - 1),  # Left
+            (row, column + 1)  # Right
         ]
 
         for neighbor in neighbors:
