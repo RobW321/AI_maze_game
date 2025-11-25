@@ -329,6 +329,7 @@ def move_goblin_towards_agent(self, random_chance):
     start = tuple(self.goblin_pos)
     player_position = tuple(self.player_pos)
 
+
     open_set = []
     heappush(open_set, (manhattan_distance_bad(start, player_position), 0, start, [start]))
 
