@@ -59,12 +59,10 @@ A window will appear showing the maze, agent, and goal.
 ## Project Structure
 
 ```
-maze-ai/
-│
-├── main.py
+├── game.py
 ├── agent.py
-├── maze.py
-├── utils.py
+├── goblin.py
+├── q_learning.py
 └── README.md
 ```
 
@@ -75,4 +73,5 @@ You can modify:
 * Maze layout in `maze.py`
 * Agent behavior in `agent.py`
 * Rendering colors, grid size, and speed in `main.py`
+
 
