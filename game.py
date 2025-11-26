@@ -290,6 +290,7 @@ def manhattan_distance_bad(pos1, pos2):
 
 
     # The reason uniform distribution was used was so that we have a variance in random noise chance
+    # This is the main reason the "noise" works, making the goblin stupid
     noise = random.uniform(0.2, 0.4) * manhattan
     return manhattan + noise
 
