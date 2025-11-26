@@ -159,37 +159,33 @@ class GridGame:
                     reward_grid[row][col] = 1 # Reward for a normal state is small but positive
         return reward_grid
 
-    def execute(self, command):
-        if command == "UP" and self.player_pos[0] > 0 and self.grid[self.player_pos[0] - 1][self.player_pos[1]] != "W":
-            self.player_pos[0] -= 1
-        elif command == "DOWN" and self.player_pos[0] < self.rows - 1 and self.grid[self.player_pos[0] + 1][self.player_pos[1]] != "W":
-            self.player_pos[0] += 1
-        elif command == "LEFT" and self.player_pos[1] > 0 and self.grid[self.player_pos[0]][self.player_pos[1] - 1] != "W":
-            self.player_pos[1] -= 1
-        elif command == "RIGHT" and self.player_pos[1] < self.cols - 1 and self.grid[self.player_pos[0]][self.player_pos[1] + 1] != "W":
-            self.player_pos[1] += 1
-
-    def move_goblin(self, command):
+    def execute(self, command, entity="PLAYER"):
         if command is None:
             return
 
-        if command == "UP" and self.goblin_pos[0] > 0 and self.grid[self.goblin_pos[0] - 1][self.goblin_pos[1]] != "W":
-            self.goblin_pos[0] -= 1
-        elif command == "DOWN" and self.goblin_pos[0] < self.rows - 1 and self.grid[self.goblin_pos[0] + 1][
-            self.goblin_pos[1]] != "W":
-            self.goblin_pos[0] += 1
-        elif command == "LEFT" and self.goblin_pos[1] > 0 and self.grid[self.goblin_pos[0]][
-            self.goblin_pos[1] - 1] != "W":
-            self.goblin_pos[1] -= 1
-        elif command == "RIGHT" and self.goblin_pos[1] < self.cols - 1 and self.grid[self.goblin_pos[0]][
-            self.goblin_pos[1] + 1] != "W":
-            self.goblin_pos[1] += 1
+        if entity == "PLAYER":
+            pos = self.player_pos
+        elif entity == "GOBLIN":
+            pos = self.goblin_pos
+        else:
+            return
 
-    def display_move(self, move):
-        self.execute(move)  # update agent position
+        if command == "UP" and pos[0] > 0 and self.grid[pos[0] - 1][pos[1]] != "W":
+            pos[0] -= 1
+        elif command == "DOWN" and pos[0] < self.rows - 1 and self.grid[pos[0] + 1][pos[1]] != "W":
+            pos[0] += 1
+        elif command == "LEFT" and pos[1] > 0 and self.grid[pos[0]][pos[1] - 1] != "W":
+            pos[1] -= 1
+        elif command == "RIGHT" and pos[1] < self.cols - 1 and self.grid[pos[0]][pos[1] + 1] != "W":
+            pos[1] += 1
+
+
+    def display_move(self, move, entity):
+        self.execute(move, entity=entity)  # update agent position
         self._draw_grid()  # redraw the grid
-        time.sleep(self.delay)
         pygame.display.flip()
+        time.sleep(self.delay)
+
 
 
 game = GridGame()
@@ -387,7 +383,7 @@ def move_goblin_towards_agent(self, random_chance):
 
 if __name__ == "__main__":
     # Initialize the game
-    game = GridGame(rows=50, cols=50, cell_size=14, render_delay=0.2)
+    game = GridGame(rows=50, cols=50, cell_size=14, render_delay=0.08)
 
 
     # Example goal and goblin positions
@@ -397,11 +393,10 @@ if __name__ == "__main__":
     running = True
     while running:
         next_move = plan_next_move(game.player_pos, goal, goblin_pos, grid=game.grid)
-
-        game.display_move(next_move)
+        game.display_move(next_move, entity="PLAYER")
 
         goblin_move = move_goblin_towards_agent(game, 20)
-        game.move_goblin(goblin_move)
+        game.display_move(goblin_move, entity="GOBLIN")
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
