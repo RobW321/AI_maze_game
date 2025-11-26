@@ -159,21 +159,33 @@ class GridGame:
                     reward_grid[row][col] = 1 # Reward for a normal state is small but positive
         return reward_grid
 
-    def execute(self, command):
-        if command == "UP" and self.player_pos[0] > 0 and self.grid[self.player_pos[0] - 1][self.player_pos[1]] != "W":
-            self.player_pos[0] -= 1
-        elif command == "DOWN" and self.player_pos[0] < self.rows - 1 and self.grid[self.player_pos[0] + 1][self.player_pos[1]] != "W":
-            self.player_pos[0] += 1
-        elif command == "LEFT" and self.player_pos[1] > 0 and self.grid[self.player_pos[0]][self.player_pos[1] - 1] != "W":
-            self.player_pos[1] -= 1
-        elif command == "RIGHT" and self.player_pos[1] < self.cols - 1 and self.grid[self.player_pos[0]][self.player_pos[1] + 1] != "W":
-            self.player_pos[1] += 1
+    def execute(self, command, entity="PLAYER"):
+        if command is None:
+            return
 
-    def display_move(self, move):
-        self.execute(move)  # update agent position
+        if entity == "PLAYER":
+            pos = self.player_pos
+        elif entity == "GOBLIN":
+            pos = self.goblin_pos
+        else:
+            return
+
+        if command == "UP" and pos[0] > 0 and self.grid[pos[0] - 1][pos[1]] != "W":
+            pos[0] -= 1
+        elif command == "DOWN" and pos[0] < self.rows - 1 and self.grid[pos[0] + 1][pos[1]] != "W":
+            pos[0] += 1
+        elif command == "LEFT" and pos[1] > 0 and self.grid[pos[0]][pos[1] - 1] != "W":
+            pos[1] -= 1
+        elif command == "RIGHT" and pos[1] < self.cols - 1 and self.grid[pos[0]][pos[1] + 1] != "W":
+            pos[1] += 1
+
+
+    def display_move(self, move, entity):
+        self.execute(move, entity=entity)  # update agent position
         self._draw_grid()  # redraw the grid
-        time.sleep(self.delay)
         pygame.display.flip()
+        time.sleep(self.delay)
+
 
 
 game = GridGame()
@@ -262,44 +274,60 @@ def plan_next_move(player_pos, goal, goblin_pos, grid=None):
     return None
 
 def manhattan_distance_bad(pos1, pos2):
-   dx = abs(pos1[0] - pos2[0])
-   dy = abs(pos1[1] - pos2[1])
-   manhattan = dx + dy
+    """
+    - This function calculates an intentionally suboptimal heuristic for the A* algorithm.
+    - In the case of this program, we ensure a suboptimal heuristic by adding noise(20-40% error) to the heuristic.
+    - The goal of this "bad" heuristic is to make the goblin's pathfinding more "imperfect" so that there's some variance
+      in the A* algorithms of the agent and the goblin, making the game more interesting visually.
+
+    :param pos1: position of first agent
+    :param pos2: position of second agent
+    :return: Manhattan distance between the two agents
+    """
+    dx = abs(pos1[0] - pos2[0])
+    dy = abs(pos1[1] - pos2[1])
+    manhattan = dx + dy
 
 
-   noise = random.uniform(0.2, 0.4) * manhattan #can change the noise error, depending on visualization
-   return manhattan + noise
-
-def distance(pos):
-    return manhattan_distance_bad(pos[0], pos[1])
+    # The reason uniform distribution was used was so that we have a variance in random noise chance
+    noise = random.uniform(0.2, 0.4) * manhattan
+    return manhattan + noise
 
 def move_goblin_towards_agent(self, random_chance):
-    # manhattan distance to agent heuristic, but random chance it moves to random place
+    """
+    Moves the goblin towards the player agent using a modified A* algorithm with an intentional chance of random movement.
+    
+    :param self: The GridGame instance for accessing the goblin, player, and grid. 
+    :param random_chance: An integer (1-100) defining the percentage probability (e.g., 20 = 20%) 
+                          for the goblin to make a random valid move instead of following the heuristic path.
+    :return: The updated position of the goblin.
+    """
 
     if random.randint(1, 100) <= random_chance:
-        goblin_x, goblin_y = self.goblin_pos 
+        goblin_row, goblin_column = self.goblin_pos
         potential_moves = [
-            [goblin_x - 1, goblin_y],  # Up
-            [goblin_x + 1, goblin_y],  # Down
-            [goblin_x, goblin_y - 1],  # Left
-            [goblin_x, goblin_y + 1]  # Right
+            ([goblin_row - 1, goblin_column], "UP"),
+            ([goblin_row + 1, goblin_column], "DOWN"),
+            ([goblin_row, goblin_column - 1], "LEFT"),
+            ([goblin_row, goblin_column + 1], "RIGHT")
         ]
 
         valid_moves = [
-            [x, y] for x, y in potential_moves
-            if 0 <= x < self.rows and 0 <= y < self.cols and self.grid[x][y] != "W"
+            cmd for pos, cmd in potential_moves
+            if 0 <= pos[0] < self.rows and 0 <= pos[1] < self.cols and self.grid[pos[0]][pos[1]] != "W"
         ]
 
         if valid_moves:
-            self.goblin_pos = random.choice(valid_moves)
-        return self.goblin_pos
+            return random.choice(valid_moves)
+        return None #No random moves
 
     # A* implementation:
     start = tuple(self.goblin_pos)
-    goal = tuple(self.player_pos)
+    player_position = tuple(self.player_pos)
+
 
     open_set = []
-    heappush(open_set, (manhattan_distance_bad(start, goal), 0, start, [start]))
+    heappush(open_set, (manhattan_distance_bad(start, player_position), 0, start, [start]))
 
     visited = set()
 
@@ -307,59 +335,68 @@ def move_goblin_towards_agent(self, random_chance):
         f_score, g_score, current, path = heappop(open_set)
 
         # If we reached the agent, return only the first move in the path
-        if current == goal:
+        if current == player_position:
             if len(path) > 1:
                 # Take only the first step from the path
-                self.goblin_pos = list(path[1])
-            return self.goblin_pos
+                next_pos = path[1]
+                current_pos = self.goblin_pos
+
+                if next_pos[0] < current_pos[0]:
+                    return "UP"
+                elif next_pos[0] > current_pos[0]:
+                    return "DOWN"
+                elif next_pos[1] < current_pos[1]:
+                    return "LEFT"
+                elif next_pos[1] > current_pos[1]:
+                    return "RIGHT"
+                return None  # Already at goal
 
         if current in visited:
             continue
         visited.add(current)
 
         # Explore possible neighbors
-        x, y = current
+        row, column = current
         neighbors = [
-            (x - 1, y),  # Up
-            (x + 1, y),  # Down
-            (x, y - 1),  # Left
-            (x, y + 1)  # Right
+            (row - 1, column),  # Up
+            (row + 1, column),  # Down
+            (row, column - 1),  # Left
+            (row, column + 1)  # Right
         ]
 
         for neighbor in neighbors:
-            n_x, n_y = neighbor
+            n_row, n_column = neighbor
 
             # Check if neighbor is valid
-            if (0 <= n_x < self.rows and
-                    0 <= n_y < self.cols and
-                    self.grid[n_x][n_y] != "W" and
+            if (0 <= n_row < self.rows and
+                    0 <= n_column < self.cols and
+                    self.grid[n_row][n_column] != "W" and
                     neighbor not in visited):
                 new_g_score = g_score + 1
-                new_f_score = new_g_score + manhattan_distance_bad(neighbor, goal)
+                new_f_score = new_g_score + manhattan_distance_bad(neighbor, player_position)
                 new_path = path + [neighbor]
 
                 heappush(open_set, (new_f_score, new_g_score, neighbor, new_path))
 
-        # If no path found, the goblin stays in place
-    return self.goblin_pos
+    # If no path found, the goblin stays in place
+    return None
 
 if __name__ == "__main__":
     # Initialize the game
-    #game = GridGame(cell_height=50, cell_width=50, render_delay=0.2)
-    game = GridGame(rows=50, cols=50, cell_size=14, render_delay=0.2)
+    game = GridGame(rows=50, cols=50, cell_size=14, render_delay=0.08)
 
 
     # Example goal and goblin positions
     goal = game.exit_pos
     goblin_pos = game.goblin_pos
 
-    running = True #false for now, cuz it keeps loading a lot
+    running = True
     while running:
         next_move = plan_next_move(game.player_pos, goal, goblin_pos, grid=game.grid)
+        game.display_move(next_move, entity="PLAYER")
 
-        game.display_move(next_move)  
-
-        goblin_pos = move_goblin_towards_agent(game, 20)
+        goblin_move = move_goblin_towards_agent(game, 20)
+        game.display_move(goblin_move, entity="GOBLIN")
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
