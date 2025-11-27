@@ -1,13 +1,12 @@
 from heapq import heappush, heappop
 from random import random
 import random
-
 import pygame
 from pygame import Rect
 import time
 import heapq
-
 from copy import deepcopy
+
 
 class GridGame:
     def __init__(self, rows=50, cols=50, cell_size=14, render_delay=0.1):
@@ -191,12 +190,14 @@ class GridGame:
 game = GridGame()
 
 
-def plan_next_move(player_pos, goal, goblin_pos, grid=None):
+
+def plan_next_move(player_pos, goal, goblin_pos, grid=None, fear_weight=7.0):
     rows = len(grid)
     cols = len(grid[0])
 
     start = tuple(player_pos)
     goal = tuple(goal)
+    goblin_pos = tuple(goblin_pos) # addition ----------------
 
     # Moves → (delta_row, delta_col, command_string)
     moves = [
@@ -213,9 +214,21 @@ def plan_next_move(player_pos, goal, goblin_pos, grid=None):
     came_from = {start: None}
     cost_so_far = {start: 0}
 
-    def heuristic(a, b):
-        # Manhattan distance
-        return abs(a[0] - b[0]) + abs(a[1] - b[1])
+    # def heuristic(a, b):
+    #     # Manhattan distance
+    #     return abs(a[0] - b[0]) + abs(a[1] - b[1])
+    
+    def heuristic(node): # addition ----------------
+        # Goal attraction (standard Manhattan)
+        h_goal = abs(node[0] - goal[0]) + abs(node[1] - goal[1])
+
+        # Goblin avoidance (inverse distance)
+        gdist = abs(node[0] - goblin_pos[0]) + abs(node[1] - goblin_pos[1])
+
+        # Make danger large when goblin is close
+        h_goblin = fear_weight * (1 / (gdist + 1))
+
+        return h_goal + h_goblin
 
     while pq:
         _, current = heapq.heappop(pq)
@@ -238,9 +251,10 @@ def plan_next_move(player_pos, goal, goblin_pos, grid=None):
 
             new_cost = cost_so_far[current] + 1
 
-            if nxt not in cost_so_far or new_cost < cost_so_far[nxt]:
+            if nxt not in cost_so_far or new_cost < cost_so_far[nxt]: 
                 cost_so_far[nxt] = new_cost
-                priority = new_cost + heuristic(nxt, goal)
+                # priority = new_cost + heuristic(nxt, goal
+                priority = new_cost + heuristic(nxt) # addition ----------------
                 heapq.heappush(pq, (priority, nxt))
                 came_from[nxt] = current
 
