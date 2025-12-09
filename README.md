@@ -16,10 +16,12 @@ Navigate the agent(in yellow) from the left side of the maze to the red exit on 
 
 ## File Overview
 
-* `main.py` – Initializes the game window, draws the grid, updates frames, and handles input.
+* `game.py` – Initializes the game window, draws the grid, updates frames, and handles input.
 * `agent.py` – Defines the A* implementation for the agent's movement.
 * `goblin.py` – Defines the A* implementation for the goblin's movement.
-* `Q_learning.py (maybe)` – Defines the Q_learning algorithm for the agent's moevemnt
+* `q_learning_gridgame.py` – 
+* `double_q_driver.py` - 
+* `single_q_driver.py` - 
 
 ## How It Works
 
@@ -31,6 +33,8 @@ The agent uses A* to plan a path from its current position to the goal located a
 * Avoids obstacles when expanding neighbors.
 * Returns a sequence of grid positions representing the shortest path.
 * The agent selects the **next step** from this path and returns it via `plan_next_move()`.
+
+### Q-learning  
 
 
 ## Running the Project
@@ -51,7 +55,7 @@ pip install pygame
 Run the game:
 
 ```
-python main.py
+python game.py
 ```
 
 A window will appear showing the maze, agent, and goal.
@@ -62,16 +66,10 @@ A window will appear showing the maze, agent, and goal.
 ├── game.py
 ├── agent.py
 ├── goblin.py
-├── q_learning.py
+├── q_learning_gridgame.py
+├── double_q_driver.py
+├── single_q_driver.py
 └── README.md
 ```
-
-## Customization
-
-You can modify:
-
-* Maze layout in `maze.py`
-* Agent behavior in `agent.py`
-* Rendering colors, grid size, and speed in `main.py`
 
 
