@@ -1,0 +1,14 @@
+{
+    "exit": [
+        3,
+        10
+    ],
+    "player_spawn": [
+        3,
+        4
+    ],
+    "goblin_spawn": [
+        8,
+        5
+    ]
+}
