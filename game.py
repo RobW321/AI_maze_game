@@ -294,7 +294,7 @@ if __name__ == "__main__":
     running = True
     while running:
         #next_move = plan_next_move(game.player_pos, goal, goblin_pos, grid=game.grid, fear_weight=40.0)
-        _, next_move = plan_next_move(game.player_pos, goal, goblin_pos, grid=game.grid, fear_weight=10, danger_zone=5)
+        next_move, _ = plan_next_move(game.player_pos, goal, goblin_pos, grid=game.grid, fear_weight=10, danger_zone=5)
         game.display_move(next_move, entity="PLAYER")
 
         goblin_move = move_goblin_towards_agent(game, 0) 
