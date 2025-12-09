@@ -6,18 +6,58 @@ from pygame import Rect
 import time
 import heapq
 from copy import deepcopy
+from collections import deque
+
+from agent import plan_next_move
+from goblin import move_goblin_towards_agent
+
+# Throughout this project, the terms "agent" and "player" refer to the same entity.
+
+
+def bfs_reachable(grid, start):
+    """
+    Performs a BFS on the given grid to determine every cell that
+    is reachable from the player's start position. Used to determine if 
+    a generated maze is actually solvable for both the agent and
+    the goblin.
+    
+    :param grid: The grid for examination
+    :param start: The starting location of the agent
+    """
+    rows, cols = len(grid), len(grid[0])
+    q = deque([tuple(start)])
+    visited = set([tuple(start)])
+
+    while q:
+        r, c = q.popleft()
+        for dr, dc in [(-1,0),(1,0),(0,-1),(0,1)]:
+            nr, nc = r + dr, c + dc
+            if (0 <= nr < rows and 0 <= nc < cols and 
+                grid[nr][nc] != "W" and 
+                (nr, nc) not in visited):
+                visited.add((nr, nc))
+                q.append((nr, nc))
+
+    return visited
+
 
 from agent import plan_next_move
 from goblin import move_goblin_towards_agent
 
 
 class GridGame:
-    def __init__(self, rows=50, cols=50, cell_size=14, render_delay=0.1):
+    def __init__(self, rows=50, cols=50, cell_size=14, render_delay=0.1, gui=True):
+        # If too low row and column values were given, override them to be the minimum
+        if rows < 5:
+            rows = 5
+        if cols < 5:
+            cols = 5
         self.rows = rows
         self.cols = cols
         self.cell_size = cell_size
         self.screen_size = self.screen_size = (cols * cell_size, rows * cell_size)
         self.delay = render_delay
+        self.gui = gui
 
         # Colors
         self.COLOR_WALL = (139, 69, 19)  # brown
@@ -34,25 +74,35 @@ class GridGame:
         self.pos = [0, 0]
 
         # Pygame setup
-        pygame.init()
-        pygame.display.init()
-        self.screen = pygame.display.set_mode(self.screen_size)
-        pygame.display.set_caption("Maze")
-        self.clock = pygame.time.Clock()
+        if gui:
+            pygame.init()
+            pygame.display.init()
+            self.screen = pygame.display.set_mode(self.screen_size)
+            pygame.display.set_caption("Maze")
+            self.clock = pygame.time.Clock()
 
-        # Generate dungeon map
-        self.grid = self._generate_maze()
+        # Generate maze map
+        self.grid = None
 
         # Find player and exit
-        self.player_pos = self._find_spawn()
-        self.exit_pos = self._place_exit()
-        self.goblin_pos = self._place_goblin()
+        self.player_pos = None
+        self.exit_pos = None
+        self.goblin_pos = None
 
-        # Generate reward grid
-        self.reward_grid = self._generate_reward_grid()
+        while True:
+            self.grid = self._generate_maze()
+            self.player_pos = self._find_spawn()
+            self.exit_pos = self._place_exit()
+            self.goblin_pos = self._place_goblin()
+
+            if self._validate_world():
+                break   # valid maze
+
 
 
     def _draw_grid(self):
+        if not self.gui:
+            return
         for row in range(self.rows):
             for col in range(self.cols):
                 rect = Rect(col * self.cell_size,
@@ -111,7 +161,11 @@ class GridGame:
             for col in range(5):  # only check first 5 columns
                 if self.grid[row][col] == "F":
                     potential_spawns.append([row, col])
-        return random.choice(potential_spawns)
+        if potential_spawns:
+            return random.choice(potential_spawns)
+        else:
+            return random.choice([(r, c) for r, row in enumerate(self.grid) for c, x in enumerate(row) if x == "F"])
+
 
 
     def _place_exit(self):
@@ -125,7 +179,10 @@ class GridGame:
             for col in range(self.cols - 1, self.cols - 6, -1):
                 if self.grid[row][col] == "F":
                     potential_exits.append([row, col])
-        return random.choice(potential_exits)
+        if potential_exits:
+            return random.choice(potential_exits)
+        else:
+            return random.choice([(r, c) for r, row in enumerate(self.grid) for c, x in enumerate(row) if x == "F"])
 
 
     def _place_goblin(self):
@@ -139,6 +196,29 @@ class GridGame:
             for col in range(self.cols // 3, 2 * self.cols // 3):
                 if self.grid[row][col] == "F":
                     potential_goblin_spawns.append([row, col])
+        if potential_goblin_spawns:
+            return random.choice(potential_goblin_spawns)
+        else:
+            return random.choice([(r, c) for r, row in enumerate(self.grid) for c, x in enumerate(row) if x == "F"])
+    
+
+    def _validate_world(self):
+        reachable = bfs_reachable(self.grid, self.player_pos)
+
+        # Must contain exit
+        if tuple(self.exit_pos) not in reachable:
+            return False
+
+        # Must contain goblin
+        if tuple(self.goblin_pos) not in reachable:
+            return False
+
+        # Ensure spawn isn't inside a tiny box
+        if len(reachable) < 20:
+            return False
+
+        return True
+
         return random.choice(potential_goblin_spawns)
     
 
@@ -191,9 +271,11 @@ class GridGame:
 
     def display_move(self, move, entity):
         self.execute(move, entity=entity)  # update agent position
-        self._draw_grid()  # redraw the grid
-        pygame.display.flip()
-        time.sleep(self.delay)
+        # self.reward_grid = self._generate_reward_grid()
+        if self.gui:
+            self._draw_grid()  # redraw the grid
+            pygame.display.flip()
+            time.sleep(self.delay)
 
 
 
@@ -212,7 +294,7 @@ if __name__ == "__main__":
     running = True
     while running:
         #next_move = plan_next_move(game.player_pos, goal, goblin_pos, grid=game.grid, fear_weight=40.0)
-        next_move = plan_next_move(game.player_pos, goal, goblin_pos, grid=game.grid, fear_weight=10, danger_zone=5)
+        next_move = _, plan_next_move(game.player_pos, goal, goblin_pos, grid=game.grid, fear_weight=10, danger_zone=5)
         game.display_move(next_move, entity="PLAYER")
 
         goblin_move = move_goblin_towards_agent(game, 0) 
