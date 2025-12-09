@@ -93,7 +93,8 @@ if __name__ == '__main__':
 
                 # Take an action
                 action = None
-                if episode > 7500 == 0:
+                if episode < 100:
+                    # Offer the chance for the agent to learn a goal exists
                     action, _ = plan_next_move(game.player_pos, game.exit_pos, game.goblin_pos, grid=game.grid)
                     if action == "UP":
                         action = 0
