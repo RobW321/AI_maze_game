@@ -84,12 +84,12 @@ def plan_next_move(player_pos, goal, goblin_pos, grid, fear_weight=10, danger_zo
     r, c = player_pos
 
     if next_row == r - 1:
-        return "UP"
+        return "UP", path
     if next_row == r + 1:
-        return "DOWN"
+        return "DOWN", path
     if next_col == c - 1:
-        return "LEFT"
+        return "LEFT", path
     if next_col == c + 1:
-        return "RIGHT"
+        return "RIGHT", path
 
     return None
