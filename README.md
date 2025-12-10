@@ -54,6 +54,7 @@ Rewards for the goblin are determined by:
 ```
 Python 3.x
 pygame
+numpy
 ```
 
 Install dependencies:
