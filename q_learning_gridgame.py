@@ -120,18 +120,16 @@ class QGridGame(GridGame):
         if self.player_pos == self.goblin_pos:
             return obs, -1000.0
 
-        # Optimal Path Reward
-
+        # Distance-based reward
         old_dist = self.dist_to_exit[old_player_pos[0]][old_player_pos[1]]
         new_dist = self.dist_to_exit[self.player_pos[0]][self.player_pos[1]]
 
-        # 1. Distance-based reward
         if new_dist < old_dist:
             reward += 1.0
         elif new_dist > old_dist:
             reward -= 1.0
 
-        # 2. Optimal path reward
+        # Optimal path reward
         if tuple(self.player_pos) in self.optimal_path:
             reward += 2.0
         else:
