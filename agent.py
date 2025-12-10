@@ -92,4 +92,4 @@ def plan_next_move(player_pos, goal, goblin_pos, grid, fear_weight=10, danger_zo
     if next_col == c + 1:
         return "RIGHT", path
 
-    return None
+    return None, path
