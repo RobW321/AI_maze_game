@@ -4,11 +4,11 @@ This repository contains a grid-based maze navigation system built with Pygame, 
 
 # Sample Image of the Agent and Goblin Traversing a Maze
 
-Yellow Square: Agent
-Green Square: Goblin
-Brown Square: Wall
-Gray Square: Floor
-Red Square: Exit
+* Yellow Square: Agent
+* Green Square: Goblin
+* Brown Square: Wall
+* Gray Square: Floor
+* Red Square: Exit
 ![Sample Maze Could Not Be Loaded.](./SampleMaze.png)
 
 ## Game Objective
