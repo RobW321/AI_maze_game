@@ -19,9 +19,9 @@ Navigate the agent(in yellow) from the left side of the maze to the red exit on 
 * `game.py` – Initializes the game window, draws the grid, updates frames, and handles input.
 * `agent.py` – Defines the A* implementation for the agent's movement.
 * `goblin.py` – Defines the A* implementation for the goblin's movement.
-* `q_learning_gridgame.py` – 
-* `double_q_driver.py` - 
-* `single_q_driver.py` - 
+* `q_learning_gridgame.py` – Defines the Q-Learning implementation for the agent and goblin's movement.
+* `double_q_driver.py` - Driver that runs our Q-learning implementation for both the agent and the goblin's movement. Generates one or many mazes for training (depending on flags specified at execution). If only a single maze is requested, its data will be saved for evaluation.
+* `single_q_driver.py` - Driver that runs our Q-Learning implementation for the agent's movement, but the goblin's movement is determined by A*. Generates one or many mazes for training (depending on flags specified at execution). If only a single maze is requested, its data will be saved for evaluation.
 
 ## How It Works
 
@@ -60,15 +60,18 @@ Install dependencies:
 
 ```
 pip install pygame
+pip install numpy
 ```
 
-Run the game:
+Run the game (read comments at the top of the "q_learning drivers" for information about what each flag does):
 
 ```
-python game.py
+python (or python3) game.py
+python (or python3) single_q_driver.py <train> <not_train> <single> <gui>
+python (or python3) double_q_driver.py <train> <not_train> <single> <gui>
 ```
 
-A window will appear showing the maze, agent, and goal.
+A window will appear showing the maze, agent, and goal if game.py is executed. This window will only appear for the "q-learning drivers" if the gui flag is given as a command line argument.
 
 ## Project Structure
 
