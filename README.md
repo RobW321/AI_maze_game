@@ -27,7 +27,7 @@ Navigate the agent(in yellow) from the left side of the maze to the red exit on 
 
 ### A* Search
 
-The agent uses A* to plan a path from its current position to the goal located at the **bottom-right corner of the grid**. The algorithm:
+The agent uses A* to plan a path from its current position to the goal located at the **right side of the grid**. The algorithm:
 
 * Uses **Manhattan distance** as the heuristic.
 * Avoids obstacles when expanding neighbors.
@@ -35,7 +35,17 @@ The agent uses A* to plan a path from its current position to the goal located a
 * The agent selects the **next step** from this path and returns it via `plan_next_move()`.
 
 ### Q-learning  
+Depending on which "q-learning driver" is executed, the agent and/or goblin use Q-learning (Reinforcement Learning) to steadily make observations about their environment and determine the results of each action they take.
 
+Rewards for the agent are determined by:
+* Proximity to goblin.
+* Whether or not the agent has reached a terminal state.
+* Length of the shortest path from the agent's position to the exit.
+* Whether or not the agent is taking the optimal path to the exit.
+
+Rewards for the goblin are determined by:
+* Proximity to the agent/player.
+* Whether or not the goblin has reached a terminal state.
 
 ## Running the Project
 
