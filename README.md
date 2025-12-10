@@ -13,7 +13,7 @@ This repository contains a grid-based maze navigation system built with Pygame, 
 
 ## Game Objective
 
-Navigate the agent(in yellow) from the left side of the maze to the red exit on the right side while avoiding the green agent.
+Navigate the agent from the left side of the maze to the exit on the right side while avoiding the goblin.
 
 ## Features
 
